@@ -1,0 +1,72 @@
+数据类型
+
+1.文件
+2.目录
+3.数据块
+
+数据结构
+
+1.目录下有多个文件
+2.一个文件由多个数据块组成
+3.数据块存放在不同的远端服务上
+
+数据库模型
+
+directory
+
+dir_path, dir_name, create_time, sub_dir(json), sub_file(json)
+
+file
+
+file_path, file_name, create_time, sub_chunk(json)
+
+chunk
+
+chunk_id, chunk_source, chunk_hash, chunk_size
+
+文件接口
+
+mkdir , lsdir, rmdir , copyFrom, copyTo, delete
+
+实现设计
+
+oxfs (实现文件接口，对接 directory , file )
+
+directory, file, chunk (对象)
+
+data_manager, （对接数据库，提供对象接口）
+
+partition_helper (分割文件，组合文件，被 file_manager 使用)
+
+chunk_provider (提供chunk的存储功能)
+
+--------
+
+data_manager
+- create_file()
+- update_file()
+- create_dir()
+- update_dir()
+- create_chunk()
+- update_chunk()
+- delete_xxxx()
+
+directory
+- sub_director()
+- sub_file()
+- create_subdir()
+- delete_subdir()
+
+file
+- sub_chunk()
+- to_chunk()
+- from_chunk()
+
+chunk
+- chunk_hash()
+- chunk_id()
+- chunk_source()
+
+chunk_writer/reader
+- write()
+- read()
