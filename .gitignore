@@ -9,6 +9,9 @@ __pycache__/
 # vscode
 .vscode
 
+# testdata
+testdata
+
 # Distribution / packaging
 .Python
 build/
