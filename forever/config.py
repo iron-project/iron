@@ -3,10 +3,13 @@
 # Const Variabes
 
 XXHASH_CHUNK_SIZE = 2 * 1024 * 1024
-DEFAULT_CHUNK_SIZE = 64 * 1024 * 1024  # 64M
+DEFAULT_CHUNK_SIZE = 8 * 1024 * 1024  # 64M
 SQLITE_PATH = 'sqlite://'
 TABLE_SCHEMA = 'schema.sql'
 TMP_PATH = '/tmp/forever'
+
+# Cloud Disk
+BAIDU = 'baidu'
 
 # SQL template
 
@@ -22,6 +25,18 @@ UPDATE directory SET sub_dir = :sub_dir, sub_file = :sub_file WHERE dir_path = :
 SQL_RMDIR = '''
 DELETE FROM directory WHERE dir_path = :dir_path
 '''
-SQL_LSFILE = '''
+SQL_GETFILE = '''
 SELECT * FROM file WHERE file_path = :file_path
+'''
+SQL_RMFILE = '''
+DELETE FROM file WHERE file_path = :file_path
+'''
+SQL_PUTFILE = '''
+INSERT INTO file (file_path, file_name, file_hash, sub_chunk) VALUES (:file_path, :file_name, :file_hash, :sub_chunk)
+'''
+SQL_PUTCHUNK = '''
+INSERT INTO chunk (chunk_id, chunk_source, chunk_hash) VALUES (:chunk_id, :chunk_source, :chunk_hash)
+'''
+SQL_RMCHUNK = '''
+DELETE FROM chunk WHERE chunk_id = :chunk_id
 '''

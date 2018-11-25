@@ -44,8 +44,7 @@ class FileUtil(object):
         return {'chunk_set': chunk_set, 'chunk_size': chunk_size}
 
     def combine(self, file_name, chunk_info, file_path):
-        target_dir = os.path.isdir(file_path)
-        if target_dir:
+        if os.path.isdir(file_path):
             file_path = os.path.join(file_path, file_name)
         chunk_set = chunk_info['chunk_set']
         chunk_set.sort()  # chunk_0, chunk_1, ... , chunk_n
