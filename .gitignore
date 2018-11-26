@@ -12,6 +12,9 @@ __pycache__/
 # testdata
 testdata
 
+# cookies
+*.cookies
+
 # Distribution / packaging
 .Python
 build/

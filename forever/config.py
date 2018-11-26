@@ -9,7 +9,11 @@ TABLE_SCHEMA = 'schema.sql'
 TMP_PATH = '/tmp/forever'
 
 # Cloud Disk
+DATA_PATH = '/forever_data'
 BAIDU = 'baidu'
+BAIDU_USR_NAME = 'C语言大菜'
+BAIDU_DIR_NOT_EXIST = -9
+BAIDU_NO_ERR = 0
 
 # SQL template
 
