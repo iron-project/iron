@@ -15,6 +15,9 @@ testdata
 # cookies
 *.cookies
 
+# config
+*.ini
+
 # Distribution / packaging
 .Python
 build/

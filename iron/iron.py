@@ -12,20 +12,20 @@ from chunkservice import ChunkServiceFactory
 
 class Iron(object):
     def __init__(self):
-        self.conn = records.Database(config.SQLITE_PATH)
-        self.__init_schema__()
+        self.connect = records.Database(config.template.SQLITE_PATH)
         self.file_util = FileUtil(config.DEFAULT_CHUNK_SIZE, config.TMP_PATH)
         self.chunk_service = ChunkServiceFactory.create(config.BAIDU)
+        self.__init_schema__()
 
     def __init_schema__(self):
-        with open(config.TABLE_SCHEMA, 'r') as schema:
+        with open(config.template.TABLE_SCHEMA, 'r') as schema:
             cmds = schema.read().split(';')
             for cmd in cmds:
-                self.conn.query(cmd)
+                self.connect.query(cmd)
 
     def __dir_exist__(self, dir_path):
-        dir_info = self.conn.query(
-            config.SQL_LSDIR, dir_path=dir_path).as_dict()
+        dir_info = self.connect.query(
+            config.template.GETDIR, dir_path=dir_path).as_dict()
         return len(dir_info), dir_info
 
     def mkdir(self, dir_path, root_path=False):
@@ -34,8 +34,8 @@ class Iron(object):
             return
 
         if root_path:
-            self.conn.query(config.SQL_MKDIR, dir_path=dir_path, dir_name='',
-                            sub_dir='[]', sub_file='[]')
+            self.connect.query(config.template.PUTDIR, dir_path=dir_path, dir_name='',
+                               sub_dir='[]', sub_file='[]')
             return
 
         parent_path, basename = os.path.split(normpath)
@@ -43,14 +43,14 @@ class Iron(object):
         if not exist:
             return
 
-        self.conn.query(config.SQL_MKDIR, dir_path=normpath, dir_name=basename,
-                        sub_dir='[]', sub_file='[]')
+        self.connect.query(config.template.PUTDIR, dir_path=normpath, dir_name=basename,
+                           sub_dir='[]', sub_file='[]')
         parent_path_info = parent_path_info[0]
         parent_path_sub_dir = json.loads(parent_path_info['sub_dir'])
         parent_path_sub_dir.append(basename)
-        self.conn.query(config.SQL_UPDATE_DIR, dir_path=parent_path,
-                        sub_dir=json.dumps(parent_path_sub_dir),
-                        sub_file=parent_path_info['sub_file'])
+        self.connect.query(config.template.SETDIR, dir_path=parent_path,
+                           sub_dir=json.dumps(parent_path_sub_dir),
+                           sub_file=parent_path_info['sub_file'])
 
     def lsdir(self, dir_path):
         dir_path = os.path.normpath(dir_path)
@@ -82,14 +82,14 @@ class Iron(object):
         parent_path_info = parent_path_info[0]
         parent_path_sub_dir = json.loads(parent_path_info['sub_dir'])
         parent_path_sub_dir.remove(basename)
-        self.conn.query(config.SQL_UPDATE_DIR, dir_path=parent_path,
-                        sub_dir=json.dumps(parent_path_sub_dir),
-                        sub_file=parent_path_info['sub_file'])
-        self.conn.query(config.SQL_RMDIR, dir_path=dir_path)
+        self.connect.query(config.template.SETDIR, dir_path=parent_path,
+                           sub_dir=json.dumps(parent_path_sub_dir),
+                           sub_file=parent_path_info['sub_file'])
+        self.connect.query(config.template.RMDIR, dir_path=dir_path)
 
     def __file_exist__(self, remote_path):
-        file_info = self.conn.query(
-            config.SQL_GETFILE, file_path=remote_path).as_dict()
+        file_info = self.connect.query(
+            config.template.GETFILE, file_path=remote_path).as_dict()
         return len(file_info), file_info
 
     def putfile(self, local_path, remote_parent_path):
@@ -123,11 +123,11 @@ class Iron(object):
         parent_info = parent_info[0]
         sub_file = json.loads(parent_info['sub_file'])
         sub_file.append(file_name)
-        self.conn.query(config.SQL_UPDATE_DIR, dir_path=parent_path,
-                        sub_dir=parent_info['sub_dir'], sub_file=json.dumps(sub_file))
+        self.connect.query(config.template.SETDIR, dir_path=parent_path,
+                           sub_dir=parent_info['sub_dir'], sub_file=json.dumps(sub_file))
         # Update file
-        self.conn.query(config.SQL_PUTFILE, file_path=file_path, file_name=file_name,
-                        file_hash=file_hash, sub_chunk=json.dumps(chunk_info))
+        self.connect.query(config.template.PUTFILE, file_path=file_path, file_name=file_name,
+                           file_hash=file_hash, sub_chunk=json.dumps(chunk_info))
         return file_path
 
     def getfile(self, remote_path, local_path):
@@ -141,12 +141,12 @@ class Iron(object):
         sub_file = json.loads(dir_info['sub_file'])
         if file_name in sub_file:
             sub_file.remove(file_name)
-            self.conn.query(config.SQL_UPDATE_DIR, dir_path=parent_path,
-                            sub_file=json.dumps(sub_file), sub_dir=dir_info['sub_dir'])
+            self.connect.query(config.template.SETDIR, dir_path=parent_path,
+                               sub_file=json.dumps(sub_file), sub_dir=dir_info['sub_dir'])
 
     def __rmfile_all_chunks__(self, file_path, chunk_info):
         for chunk_name in chunk_info['chunk_set']:
-            self.conn.query(config.SQL_RMCHUNK, chunk_name=chunk_name)
+            self.connect.query(config.template.RMCHUNK, chunk_name=chunk_name)
 
     def rmfile(self, file_path):
         file_path = os.path.normpath(file_path)
@@ -158,7 +158,7 @@ class Iron(object):
         self.__rmfile_from_directory__(parent_path, file_name)
         self.__rmfile_all_chunks__(file_path,
                                    json.loads(file_info['sub_chunk']))
-        self.conn.query(config.SQL_RMFILE, file_path=file_path)
+        self.connect.query(config.template.RMFILE, file_path=file_path)
 
     def __store_chunk__(self, file_path, chunk_info):
         for chunk_name in chunk_info['chunk_set']:
@@ -171,8 +171,8 @@ class Iron(object):
         for chunk_name in chunk_info['chunk_set']:
             tmp_chunk_path = os.path.join(config.TMP_PATH, chunk_name)
             chunk_hash = self.file_util.file_hash(tmp_chunk_path)
-            self.conn.query(config.SQL_PUTCHUNK, chunk_name=chunk_name,
-                            chunk_source=config.BAIDU, chunk_hash=chunk_hash)
+            self.connect.query(config.template.PUTCHUNK, chunk_name=chunk_name,
+                               chunk_source=config.BAIDU, chunk_hash=chunk_hash)
         return True
 
     def copyfile(self, src_file, dst_file):

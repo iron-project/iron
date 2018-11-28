@@ -43,12 +43,9 @@ class ChunkService(object):
 class BaiduService(ChunkService):
     def __init__(self):
         super().__init__(config.BAIDU)
-        self.pcs = self.login(config.BAIDU_USR_NAME)
+        self.pcs = baidupcsapi.PCS(
+            config.BAIDU_USR_NAME, config.BAIDU_USR_PASSWD)
         self.__check_data_path__()
-
-    def login(self, username):
-        password = input('input password of {} >>'.format(username))
-        return baidupcsapi.PCS(username, password)
 
     def quota(self):
         r = self.pcs.quota()
