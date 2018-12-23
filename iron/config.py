@@ -18,6 +18,7 @@ BAIDU_NO_ERR = 0
 BAIDU_DIR_NOT_EXIST = -9
 BAIDU_USR_NAME = config['Baidu']['User']
 BAIDU_USR_PASSWD = config['Baidu']['Password']
+BAIDU_DL_CHUNK_SIZE = 1024
 
 # SQL template
 

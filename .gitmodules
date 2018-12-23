@@ -1,0 +1,3 @@
+[submodule "iron/baidupcsapi"]
+	path = iron/baidupcsapi
+	url = git@github.com:RainMark/baidupcsapi.git

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-import os
+import os, math
 import config
-import baidupcsapi
+import requests
 from tqdm import tqdm as progressbar
+from baidupcsapi import baidupcsapi
 
 
 class Progressbar(object):
@@ -115,6 +116,39 @@ class BaiduService(ChunkService):
                 return False
         return True
 
+    def get(self, local_path, chunk_name):
+        if not self.exist(chunk_name):
+            return False
+        url = os.path.join(config.DATA_PATH, chunk_name)
+        dlink = self.pcs.download_url(url)
+        if not len(dlink) > 0:
+            print('failed to get chunk info, chunkname {}'.format(chunk_name))
+            return False
+
+        r = requests.get(dlink[0], stream=True)
+        if 200 != r.status_code:
+            print('faild to download chunk {} [status_code {}, message {}]'.format(
+                chunk_name, r.status_code, r.content))
+            return False
+
+        chunk_file = os.path.join(local_path, chunk_name)
+        # Total size in bytes.
+        wrote = 0
+        total_size = int(r.headers.get('Content-Length', 0))
+        with open(chunk_file, 'wb') as outfile:
+            ceil = math.ceil(total_size / config.BAIDU_DL_CHUNK_SIZE)
+            desc = 'Download {}'.format(chunk_name)
+            bar = progressbar(r.iter_content(config.BAIDU_DL_CHUNK_SIZE),
+                              total=ceil, unit='KB', ascii='#', desc=desc)
+            for chunk in bar:
+                if not chunk:
+                    break
+                outfile.write(chunk)
+                wrote += len(chunk)
+        if total_size != 0 and wrote != total_size:
+            print('oops, file download failed. {}'.format(chunk_name))
+        return True
+
 
 class ChunkServiceFactory(object):
     @staticmethod
@@ -125,4 +159,6 @@ class ChunkServiceFactory(object):
 
 if '__main__' == __name__:
     service = ChunkServiceFactory.create(config.BAIDU)
-    service.put('../testdata/bin.tar.xz', 'data.txz')
+    # service.put('../testdata/bin.tar.xz', 'data.txz')
+    service.get('.', 'not exist')
+    service.get('.', 'c45dcecfb262d59f_61e4adead7c1fc24_1')
