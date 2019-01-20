@@ -130,8 +130,29 @@ class Iron(object):
                            file_hash=file_hash, sub_chunk=json.dumps(chunk_info))
         return file_path
 
-    def getfile(self, remote_path, local_path):
-        pass
+    def getfile(self, remote_path, local_path='.'):
+        remote_path = os.path.normpath(remote_path)
+        local_path = os.path.normpath(local_path)
+        file_exist, file_info = self.__file_exist__(remote_path)
+        if not file_exist:
+            print('file is not exist, [{}]'.format(remote_path))
+            return
+
+        file_info = file_info[0]
+        # Download chunks
+        chunk_info = json.loads(file_info['sub_chunk'])
+        if not self.__fetch_chunk__(chunk_info):
+            print('failed to fetch chunks of file [{}]'.format(remote_path))
+            return
+        # Combine chunks
+        file_path = self.file_util.combine(
+            file_info['file_name'], chunk_info, local_path)
+        file_hash = self.file_util.file_hash(file_path)
+        if file_hash != file_info['file_hash']:
+            print('check file hash failed, [{}] was broken.'.format(
+                remote_path))
+            return
+        return file_path
 
     def __rmfile_from_directory__(self, parent_path, file_name):
         exist, dir_info = self.__dir_exist__(parent_path)
@@ -175,6 +196,16 @@ class Iron(object):
                                chunk_source=config.BAIDU, chunk_hash=chunk_hash)
         return True
 
+    def __fetch_chunk__(self, chunk_info):
+        print(chunk_info)
+        for chunk_name in chunk_info['chunk_set']:
+            retval = self.chunk_service.get(config.TMP_PATH, chunk_name)
+            if not retval:
+                print('failed to fetch remote chunk [{}]'.format(chunk_name))
+                return False
+        return True
+
+
     def copyfile(self, src_file, dst_file):
         pass
 
@@ -209,6 +240,8 @@ class UnitTest(object):
         self.fvr.lsdir('/bar')
         self.fvr.putfile(local_path, remote_path)
         self.fvr.lsdir('/bar')
+        self.fvr.getfile('/bar/bin.tar.xz')
+        self.fvr.getfile('/bar/bin.tar.xz', 'binary_data.xz')
 
 
 if '__main__' == __name__:

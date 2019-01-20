@@ -98,6 +98,7 @@ class BaiduService(ChunkService):
         if not os.path.isfile(chunk_path):
             return False
         if self.exist(chunk_name):
+            print('chunk [{}] is exist, skip upload it.'.format(chunk_name))
             return True
         # TODO: encrypt chunk
         with open(chunk_path, 'rb') as infile:
@@ -118,6 +119,7 @@ class BaiduService(ChunkService):
 
     def get(self, local_path, chunk_name):
         if not self.exist(chunk_name):
+            print('failed to get chunk info, [{}] is not exist'.format(chunk_name))
             return False
         url = os.path.join(config.DATA_PATH, chunk_name)
         dlink = self.pcs.download_url(url)
