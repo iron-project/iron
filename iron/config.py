@@ -8,7 +8,7 @@ config.sections()
 # Const Variabes
 
 XXHASH_CHUNK_SIZE = 2 * 1024 * 1024
-DEFAULT_CHUNK_SIZE = 8 * 1024 * 1024  # 64M
+DEFAULT_CHUNK_SIZE = 4 * 1024 * 1024  # 4M
 TMP_PATH = config['Default']['TmpPath']
 DATA_PATH = config['Default']['DataPath']
 

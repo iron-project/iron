@@ -49,7 +49,8 @@ class FileUtil(object):
         if os.path.isdir(file_path):
             file_path = os.path.join(file_path, file_name)
         chunk_set = chunk_info['chunk_set']
-        chunk_set.sort()  # chunk_0, chunk_1, ... , chunk_n
+        # chunk_0, chunk_1, ... , chunk_n
+        chunk_set.sort(key=lambda element: int(element.split('_')[-1]))
         open(file_path, 'wb').close()
         with open(file_path, 'ab') as outfile:
             for chunk_name in chunk_set:
