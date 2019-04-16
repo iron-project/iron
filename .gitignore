@@ -17,6 +17,7 @@ testdata
 
 # config
 *.ini
+*.conf
 
 # Distribution / packaging
 .Python
