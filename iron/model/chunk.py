@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from template import SQLTemplate
+import pysnooper
+from iron.model.template import SQLTemplate
 
 class Chunk(object):
     def __init__(self):
@@ -18,13 +19,15 @@ class ChunkMapper(object):
         self.connect = connect
         self.template = SQLTemplate()
 
-    def is_exist(self, c):
+    # @pysnooper.snoop()
+    def exist(self, c):
         record = self.connect.query(self.template.GETCHUNK_BYPKEY,
                                     chunk_name=c.chunk_name,
                                     storage=c.storage).as_dict()
-        return len(record)
+        return len(record) > 0
 
-    def fetch(self, chunk_name, storage):
+    # @pysnooper.snoop()
+    def fetchone(self, chunk_name, storage):
         record = self.connect.query(self.template.GETCHUNK_BYPKEY,
                                     chunk_name=chunk_name,
                                     storage=storage).as_dict()
@@ -33,6 +36,7 @@ class ChunkMapper(object):
             chunk.load(record[0])
         return chunk
 
+    # @pysnooper.snoop()
     def fetch(self, chunk_name):
         record = self.connect.query(self.template.GETCHUNK_BYNAME,
                                     chunk_name=chunk_name).as_dict()
@@ -43,11 +47,14 @@ class ChunkMapper(object):
             chunk_list.append(chunk)
         return chunk_list
 
+    # @pysnooper.snoop()
     def add(self, c):
         self.connect.query(self.template.PUTCHUNK,
                            chunk_name=c.chunk_name,
-                           storage=c.storage).as_dict()
+                           storage=c.storage,
+                           chunk_hash=c.chunk_hash)
 
+    # @pysnooper.snoop()
     def delete(self, c):
         self.connect.query(self.template.RMCHUNK_BYPKEY,
                            chunk_name=c.chunk_name,
