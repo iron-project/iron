@@ -31,21 +31,22 @@ class ChunkMapper(object):
         record = self.connect.query(self.template.GETCHUNK_BYPKEY,
                                     chunk_name=chunk_name,
                                     storage=storage).as_dict()
-        chunk = Chunk()
         if len(record) > 0:
+            chunk = Chunk()
             chunk.load(record[0])
-        return chunk
+            return chunk
+        return None
 
     # @pysnooper.snoop()
     def fetch(self, chunk_name):
         record = self.connect.query(self.template.GETCHUNK_BYNAME,
                                     chunk_name=chunk_name).as_dict()
-        chunk_list = []
+        chunks = []
         for x in record:
             chunk = Chunk()
             chunk.load(x)
-            chunk_list.append(chunk)
-        return chunk_list
+            chunks.append(chunk)
+        return chunks
 
     # @pysnooper.snoop()
     def add(self, c):

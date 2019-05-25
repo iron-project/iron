@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import json
-from template import SQLTemplate
+import pysnooper
+from iron.model.template import SQLTemplate
 
 class File(object):
-    def __init__():
+    def __init__(self):
         self.full_path = ''
         self.base_name = ''
         self.filehash = ''
@@ -22,23 +23,27 @@ class FileMapper(object):
         self.connect = connect
         self.template = SQLTemplate()
 
-    def is_exist(self, f):
-        record = self.connect.query(self.template.GETFILE, id=f.full_path)
-        .as_dict()
-        return len(record)
+    def exist(self, f):
+        record = self.connect.query(
+            self.template.GETFILE, id=f.full_path).as_dict()
+        return len(record) > 0
 
+    # @pysnooper.snoop()
     def fetch(self, full_path):
-        record = self.connect.query(self.template.GETFILE, id=full_path)
-        .as_dict()
-        f = File()
+        record = self.connect.query(
+            self.template.GETFILE, id=full_path).as_dict()
         if len(record) > 0:
+            f = File()
             f.load(record[0])
-        return f
+            return f
+        return None
 
     def add(self, f):
-        self.connect.query(self.template.PUTFILE, id=f.full_path,
-                           base_name=f.base_name, file_hash=json.dumps(f.filehash)
-                           chunks=json.dumps(f.chunks))
+        self.connect.query(
+            self.template.PUTFILE, id=f.full_path,
+            base_name=f.base_name, file_hash=f.filehash,
+            chunks=json.dumps(f.chunks))
 
     def delete(self, f):
-        self.connect.query(self.template.RMFILE, id=f.full_path)
+        self.connect.query(
+            self.template.RMFILE, id=f.full_path)
