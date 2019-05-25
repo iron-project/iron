@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import json
-from template import SQLTemplate
+from iron.model.template import SQLTemplate
 
 class Directory(object):
     def __init__(self):
@@ -17,7 +17,7 @@ class Directory(object):
         self.directories = json.loads(database_data['directories'])
 
     def add_directory(self, d):
-        if d.base_name in self.directoies:
+        if d.base_name in self.directories:
             return False
         self.directories.append(d.base_name)
         return True
@@ -39,22 +39,23 @@ class DirectoryMapper(object):
         self.connect = connect
         self.template = SQLTemplate()
 
-    def is_exist(self, d):
-        record = self.connect.query(self.template.GETDIR, id=d.full_path)
-        .as_dict()
-        return len(record)
+    def exist(self, d):
+        record = self.connect.query(
+            self.template.GETDIR, id=d.full_path).as_dict()
+        return len(record) > 0
 
     def fetch(self, full_path):
-        record = self.connect.query(self.template.GETDIR, id=full_path)
-        .as_dict()
-        d = Directory()
+        record = self.connect.query(
+            self.template.GETDIR, id=full_path).as_dict()
         if len(record) > 0:
+            d = Directory()
             d.load(record[0])
-        return d
+            return d
+        return None
 
     def add(self, d):
         self.connect.query(self.template.PUTDIR, id=d.full_path,
-                           base_name=d.base_name, files=json.dumps(d.files)
+                           base_name=d.base_name, files=json.dumps(d.files),
                            directories=json.dumps(d.directories))
 
     def update(self, d):
