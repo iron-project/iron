@@ -1,0 +1,7 @@
+*** unittest
+
+#+begin_src bash
+$ git clone https://github.com/RainMark/iron.git
+$ cd iron
+$ python -m unittest iron/*/*_test.py
+#+end_src
