@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import json
+import json, os
 import pysnooper
 from iron.model.template import SQLTemplate
 
@@ -10,6 +10,9 @@ class File(object):
         self.base_name = ''
         self.filehash = ''
         self.chunks = []
+
+    def pardir(self):
+        return os.path.split(self.full_path)[0]
 
     def load(self, database_data):
         self.full_path = database_data['id']
@@ -22,6 +25,12 @@ class FileMapper(object):
     def __init__(self, connect):
         self.connect = connect
         self.template = SQLTemplate()
+
+    def create(self, full_path):
+        f = File()
+        normpath = os.path.normpath(path)
+        f.base_name = os.path.basename(normpath)
+        f.full_path = normpath
 
     def exist(self, f):
         record = self.connect.query(

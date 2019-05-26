@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import json
+import json, os
 from iron.model.template import SQLTemplate
 
 class Directory(object):
@@ -15,6 +15,9 @@ class Directory(object):
         self.base_name = database_data['base_name']
         self.files = json.loads(database_data['files'])
         self.directories = json.loads(database_data['directories'])
+
+    def pardir(self):
+        return os.path.split(self.full_path)[0]
 
     def add_directory(self, d):
         if d.base_name in self.directories:
@@ -38,6 +41,12 @@ class DirectoryMapper(object):
     def __init__(self, connect):
         self.connect = connect
         self.template = SQLTemplate()
+
+    def create(self, full_path):
+        d = Directory()
+        normpath = os.path.normpath(path)
+        d.base_name = os.path.basename(normpath)
+        d.full_path = normpath
 
     def exist(self, d):
         record = self.connect.query(

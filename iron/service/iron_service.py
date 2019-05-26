@@ -5,92 +5,76 @@ import os
 import json
 import records
 import xxhash
-import config
-from fileoperator import FileUtil
-from chunkservice import ChunkServiceFactory
+
+from iron.model.chunk import Chunk, ChunkMapper
+from iron.model.file import File, FileMapper
+from iron.model.directory import Directory, DirectoryMapper
+from iron.util.file_operator import FileUtil
+from iron.service.config_service import ConfigService
+from iron.service.chunk_service import ChunkServiceFactory
 
 
 class Iron(object):
-    def __init__(self):
-        self.connect = records.Database(config.template.SQLITE_PATH)
-        self.file_util = FileUtil(config.DEFAULT_CHUNK_SIZE, config.TMP_PATH)
-        self.chunk_service = ChunkServiceFactory.create(config.BAIDU)
-        self.__init_schema__()
+    def __init__(self, config=ConfigService()):
+        self.config = config
+        self._init_mappers()
+        self.file_util = FileUtil(self.config.DEFAULT_CHUNK_SIZE, self.config.TMP_PATH)
+        self.chunk_service = ChunkServiceFactory.create(self.config.BAIDU)
 
-    def __init_schema__(self):
-        with open(config.template.TABLE_SCHEMA, 'r') as schema:
-            cmds = schema.read().split(';')
-            for cmd in cmds:
-                self.connect.query(cmd)
+    def _init_mappers(self):
+        self.connect = records.Database(self.config.template.SQLITE_PATH)
+        with open(self.config.template.TABLE_SCHEMA, 'r') as schema:
+            for sql in schema.read().split(';'):
+                self.connect.query(sql)
 
-    def __dir_exist__(self, dir_path):
-        dir_info = self.connect.query(
-            config.template.GETDIR, dir_path=dir_path).as_dict()
-        return len(dir_info), dir_info
+        self.chunk_mapper = ChunkMapper(self.connect)
+        self.file_mapper = FileMapper(self.connect)
+        self.directory_mapper = DirectoryMapper(self.connect)
 
     def mkdir(self, dir_path, root_path=False):
-        normpath = os.path.normpath(dir_path)
-        if self.__dir_exist__(normpath)[0]:
-            return
+        d = self.directory_mapper.create(dir_path)
+        if self.directory_mapper.exist(d):
+            return True
 
         if root_path:
-            self.connect.query(config.template.PUTDIR, dir_path=dir_path, dir_name='',
-                               sub_dir='[]', sub_file='[]')
-            return
+            self.directory_mapper.add(d)
+            return True
 
-        parent_path, basename = os.path.split(normpath)
-        exist, parent_path_info = self.__dir_exist__(parent_path)
-        if not exist:
-            return
+        p = self.directory_mapper.fetch(d.pardir())
+        if p is None:
+            print('{} is not exist.',format(p.full_path))
+            return False
 
-        self.connect.query(config.template.PUTDIR, dir_path=normpath, dir_name=basename,
-                           sub_dir='[]', sub_file='[]')
-        parent_path_info = parent_path_info[0]
-        parent_path_sub_dir = json.loads(parent_path_info['sub_dir'])
-        parent_path_sub_dir.append(basename)
-        self.connect.query(config.template.SETDIR, dir_path=parent_path,
-                           sub_dir=json.dumps(parent_path_sub_dir),
-                           sub_file=parent_path_info['sub_file'])
+        self.directory_mapper.add(d)
+        p.add_directory(d)
+        self.directory_mapper.update(p)
+        return True
 
     def lsdir(self, dir_path):
         dir_path = os.path.normpath(dir_path)
-        dir_exist, dir_info = self.__dir_exist__(dir_path)
-        if dir_exist:
-            self.__dir_format__(dir_info[0])
-        else:
-            print('{} is not exist.'.format(dir_path))
+        d = self.directory_mapper.fetch(dir_path)
+        if d is not None:
+            print(directory.directories, directory.files)
+            return d
 
-    def __dir_format__(self, dir_info):
-        sub_dir = json.loads(dir_info['sub_dir'])
-        sub_file = json.loads(dir_info['sub_file'])
-        print(sub_dir, sub_file)
+        print('{} is not exist.'.format(dir_path))
 
     def rmdir(self, dir_path):
-        dir_path = os.path.normpath(dir_path)
-        exist, dir_info = self.__dir_exist__(dir_path)
-        if not exist:
+        d = self.directory_mapper.create(dir_path)
+        if self.directory_mapper.exist(d):
             print('{} is not exist.'.format(dir_path))
-            return
-        dir_info = dir_info[0]
-        sub_dir = json.loads(dir_info['sub_dir'])
-        sub_file = json.loads(dir_info['sub_file'])
-        if len(sub_dir) or len(sub_file):
-            print('{} is not empty.'.format(dir_path))
-            return
-        parent_path, basename = os.path.split(dir_path)
-        exist, parent_path_info = self.__dir_exist__(parent_path)
-        parent_path_info = parent_path_info[0]
-        parent_path_sub_dir = json.loads(parent_path_info['sub_dir'])
-        parent_path_sub_dir.remove(basename)
-        self.connect.query(config.template.SETDIR, dir_path=parent_path,
-                           sub_dir=json.dumps(parent_path_sub_dir),
-                           sub_file=parent_path_info['sub_file'])
-        self.connect.query(config.template.RMDIR, dir_path=dir_path)
+            return False
 
-    def __file_exist__(self, remote_path):
-        file_info = self.connect.query(
-            config.template.GETFILE, file_path=remote_path).as_dict()
-        return len(file_info), file_info
+        d = self.directory_mapper.fetch(d.full_path)
+        if len(d.directories) or len(d.files):
+            print('{} is not empty.'.format(dir_path))
+            return False
+
+        p = self.directory_mapper.fetch(d.pardir())
+        assert(p is not None)
+        p.rm_directory(d)
+        self.directory_mapper.update(p)
+        self.directory_mapper.delete(d)
 
     def putfile(self, local_path, remote_parent_path):
         parent_path = os.path.normpath(remote_parent_path)
@@ -123,10 +107,10 @@ class Iron(object):
         parent_info = parent_info[0]
         sub_file = json.loads(parent_info['sub_file'])
         sub_file.append(file_name)
-        self.connect.query(config.template.SETDIR, dir_path=parent_path,
+        self.connect.query(self.config.template.SETDIR, dir_path=parent_path,
                            sub_dir=parent_info['sub_dir'], sub_file=json.dumps(sub_file))
         # Update file
-        self.connect.query(config.template.PUTFILE, file_path=file_path, file_name=file_name,
+        self.connect.query(self.config.template.PUTFILE, file_path=file_path, file_name=file_name,
                            file_hash=file_hash, sub_chunk=json.dumps(chunk_info))
         return file_path
 
@@ -162,12 +146,12 @@ class Iron(object):
         sub_file = json.loads(dir_info['sub_file'])
         if file_name in sub_file:
             sub_file.remove(file_name)
-            self.connect.query(config.template.SETDIR, dir_path=parent_path,
+            self.connect.query(self.config.template.SETDIR, dir_path=parent_path,
                                sub_file=json.dumps(sub_file), sub_dir=dir_info['sub_dir'])
 
     def __rmfile_all_chunks__(self, file_path, chunk_info):
         for chunk_name in chunk_info['chunk_set']:
-            self.connect.query(config.template.RMCHUNK, chunk_name=chunk_name)
+            self.connect.query(self.config.template.RMCHUNK, chunk_name=chunk_name)
 
     def rmfile(self, file_path):
         file_path = os.path.normpath(file_path)
@@ -179,27 +163,27 @@ class Iron(object):
         self.__rmfile_from_directory__(parent_path, file_name)
         self.__rmfile_all_chunks__(file_path,
                                    json.loads(file_info['sub_chunk']))
-        self.connect.query(config.template.RMFILE, file_path=file_path)
+        self.connect.query(self.config.template.RMFILE, file_path=file_path)
 
     def __store_chunk__(self, file_path, chunk_info):
         for chunk_name in chunk_info['chunk_set']:
             retval = self.chunk_service.put(
-                os.path.join(config.TMP_PATH, chunk_name), chunk_name)
+                os.path.join(self.config.TMP_PATH, chunk_name), chunk_name)
             if not retval:
                 print('failed to store chunk [{}]'.format(chunk_name))
                 return False
 
         for chunk_name in chunk_info['chunk_set']:
-            tmp_chunk_path = os.path.join(config.TMP_PATH, chunk_name)
+            tmp_chunk_path = os.path.join(self.config.TMP_PATH, chunk_name)
             chunk_hash = self.file_util.file_hash(tmp_chunk_path)
-            self.connect.query(config.template.PUTCHUNK, chunk_name=chunk_name,
-                               chunk_source=config.BAIDU, chunk_hash=chunk_hash)
+            self.connect.query(self.config.template.PUTCHUNK, chunk_name=chunk_name,
+                               chunk_source=self.config.BAIDU, chunk_hash=chunk_hash)
         return True
 
     def __fetch_chunk__(self, chunk_info):
         print(chunk_info)
         for chunk_name in chunk_info['chunk_set']:
-            retval = self.chunk_service.get(config.TMP_PATH, chunk_name)
+            retval = self.chunk_service.get(self.config.TMP_PATH, chunk_name)
             if not retval:
                 print('failed to fetch remote chunk [{}]'.format(chunk_name))
                 return False
