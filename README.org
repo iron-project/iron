@@ -1,7 +1,34 @@
+** develop
+
+   #+begin_src bash
+   $ git clone https://github.com/RainMark/iron.git
+   $ cd iron
+   #+end_src
+
+*** setup
+
+    - open iron/iron.conf, input default config.
+
+    #+begin_src bash
+    $ tree iron/etc
+    iron/etc
+    ├── iron.conf
+    └── iron.sql
+
+    0 directories, 2 files
+
+    $ cat iron/etc/iron.conf
+    [Default]
+    TmpPath = /tmp/iron
+    DataPath = /iron
+
+    [Baidu]
+    User = xxx
+    Password = xxx
+    #+end_src
+
 *** unittest
 
-#+begin_src bash
-$ git clone https://github.com/RainMark/iron.git
-$ cd iron
-$ python -m unittest iron/*/*_test.py
-#+end_src
+    #+begin_src bash
+    $ python -m unittest iron/*/*_test.py
+    #+end_src

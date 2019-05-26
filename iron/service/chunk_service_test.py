@@ -16,7 +16,7 @@ class ChunkServiceTest(unittest.TestCase):
 
     def setUp(self):
         self.data_name = 'bin.tar.xz'
-        self.testdata = './testdata/bin.tar.xz'
+        self.testdata = 'testdata/bin.tar.xz'
         self.tmp_path = self.config.TMP_PATH
         self.tmp_data = os.path.join(self.tmp_path, self.data_name)
         self.baidu = ChunkServiceFactory.create(self.config.BAIDU)
@@ -32,13 +32,13 @@ class ChunkServiceTest(unittest.TestCase):
         response = self.baidu.get(self.tmp_path, 'notexist')
         print(response)
 
-        for x in self.chunk_info['chunk_set']:
+        for x in self.chunk_info['chunk_set'][:2]:
             chunk_file = os.path.join(self.tmp_path, x)
             self.baidu.put(chunk_file, x)
 
         self.tearDown()
         os.makedirs(self.tmp_path)
-        for x in self.chunk_info['chunk_set']:
+        for x in self.chunk_info['chunk_set'][:2]:
             self.baidu.get(self.tmp_path, x)
 
     def test_quota(self):

@@ -14,7 +14,7 @@ class FileUtilTest(unittest.TestCase):
 
     def setUp(self):
         self.data_name = 'bin.tar.xz'
-        self.testdata = './testdata/bin.tar.xz'
+        self.testdata = 'testdata/bin.tar.xz'
         self.tmp_path = self.config.TMP_PATH
         self.tmp_data = os.path.join(self.tmp_path, self.data_name)
         self.file_util = FileUtil(self.config.DEFAULT_CHUNK_SIZE, self.tmp_path)
