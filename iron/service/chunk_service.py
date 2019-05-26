@@ -43,6 +43,9 @@ class BaiduService(ChunkService):
             self.config.BAIDU_USR_NAME, self.config.BAIDU_USR_PASSWD)
         self._check_data_path()
 
+    def __del__(self):
+        self.pcs.session.close()
+
     def quota(self):
         r = self.pcs.quota()
         if 200 != r.status_code:
