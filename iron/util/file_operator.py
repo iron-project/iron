@@ -3,18 +3,18 @@
 import sys
 import os
 import xxhash
-import config
-
+from iron.service.config_service import ConfigService
 
 class FileUtil(object):
     def __init__(self, chunk_size, work_path):
+        self.config = ConfigService()
         self.work_path = work_path
         self.chunk_size = chunk_size
         if not os.path.exists(self.work_path):
             os.mkdir(self.work_path)
 
     @staticmethod
-    def file_hash(file_path):
+    def file_hash(file_path, config = ConfigService()):
         x = xxhash.xxh64()
         with open(file_path, 'rb') as infile:
             chunk = infile.read(config.XXHASH_CHUNK_SIZE)
@@ -59,18 +59,3 @@ class FileUtil(object):
                     chunk = infile.read(chunk_info['chunk_size'])
                     outfile.write(chunk)
         return file_path
-
-
-if '__main__' == __name__:
-    data_name = 'bin.tar.xz'
-    testdata = '../testdata/bin.tar.xz'
-    tmp_path = config.TMP_PATH
-    tmp_data = os.path.join(tmp_path, data_name)
-    file_util = FileUtil(config.DEFAULT_CHUNK_SIZE, tmp_path)
-    os.system('cp {} {}'.format(testdata, tmp_path))
-    chunk_info = file_util.split(tmp_data)
-    os.system('rm -rf {}'.format(tmp_data))
-    file_path = file_util.combine(data_name, chunk_info, tmp_path)
-    os.system('rm -rf {}'.format(tmp_data))
-    file_path = file_util.combine(data_name, chunk_info, tmp_data)
-    print(file_path)
