@@ -1,13 +1,13 @@
 CREATE TABLE directory (
     id TEXT PRIMARY KEY,
-    base_name TEXT NOT NULL,
+    dir_name TEXT NOT NULL,
     directories  TEXT NOT NULL,
     files TEXT NOT NULL
 );
 
 CREATE TABLE file (
     id TEXT PRIMARY KEY,
-    base_name TEXT NOT NULL,
+    file_name TEXT NOT NULL,
     file_hash TEXT NOT NULL,
     chunks TEXT NOT NULL
 );

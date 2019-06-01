@@ -3,12 +3,12 @@
 class SQLTemplate(object):
     def __init__(self):
         self.GETDIR = 'SELECT * FROM directory WHERE id = :id'
-        self.PUTDIR = 'INSERT INTO directory (id, base_name, directories, files) VALUES (:id, :base_name, :directories, :files)'
+        self.PUTDIR = 'INSERT INTO directory (id, dir_name, directories, files) VALUES (:id, :dir_name, :directories, :files)'
         self.SETDIR = 'UPDATE directory SET directories = :directories, files = :files WHERE id = :id'
         self.RMDIR = 'DELETE FROM directory WHERE id = :id'
 
         self.GETFILE = 'SELECT * FROM file WHERE id = :id'
-        self.PUTFILE = 'INSERT INTO file (id, base_name, file_hash, chunks) VALUES (:id, :base_name, :file_hash, :chunks)'
+        self.PUTFILE = 'INSERT INTO file (id, file_name, file_hash, chunks) VALUES (:id, :file_name, :file_hash, :chunks)'
         self.RMFILE = 'DELETE FROM file WHERE id = :id'
 
         self.GETCHUNK_BYNAME = 'SELECT * FROM chunk WHERE chunk_name = :chunk_name'

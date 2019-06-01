@@ -19,18 +19,27 @@ class ChunkMapper(object):
         self.connect = connect
         self.template = SQLTemplate()
 
+    def create(self, chunk_name, storage, chunk_hash):
+        c = Chunk()
+        c.chunk_name = chunk_name
+        c.chunk_hash = chunk_hash
+        c.storage = storage
+        return c
+
     # @pysnooper.snoop()
     def exist(self, c):
-        record = self.connect.query(self.template.GETCHUNK_BYPKEY,
-                                    chunk_name=c.chunk_name,
-                                    storage=c.storage).as_dict()
+        record = self.connect.query(
+            self.template.GETCHUNK_BYPKEY,
+            chunk_name=c.chunk_name,
+            storage=c.storage).as_dict()
         return len(record) > 0
 
     # @pysnooper.snoop()
     def fetchone(self, chunk_name, storage):
-        record = self.connect.query(self.template.GETCHUNK_BYPKEY,
-                                    chunk_name=chunk_name,
-                                    storage=storage).as_dict()
+        record = self.connect.query(
+            self.template.GETCHUNK_BYPKEY,
+            chunk_name=chunk_name,
+            storage=storage).as_dict()
         if len(record) > 0:
             chunk = Chunk()
             chunk.load(record[0])
@@ -39,8 +48,9 @@ class ChunkMapper(object):
 
     # @pysnooper.snoop()
     def fetch(self, chunk_name):
-        record = self.connect.query(self.template.GETCHUNK_BYNAME,
-                                    chunk_name=chunk_name).as_dict()
+        record = self.connect.query(
+            self.template.GETCHUNK_BYNAME,
+            chunk_name=chunk_name).as_dict()
         chunks = []
         for x in record:
             chunk = Chunk()
@@ -50,13 +60,20 @@ class ChunkMapper(object):
 
     # @pysnooper.snoop()
     def add(self, c):
-        self.connect.query(self.template.PUTCHUNK,
-                           chunk_name=c.chunk_name,
-                           storage=c.storage,
-                           chunk_hash=c.chunk_hash)
+        self.connect.query(
+            self.template.PUTCHUNK,
+            chunk_name=c.chunk_name,
+            storage=c.storage,
+            chunk_hash=c.chunk_hash)
 
     # @pysnooper.snoop()
+    def deleteone(self, c):
+        self.connect.query(
+            self.template.RMCHUNK_BYPKEY,
+            chunk_name=c.chunk_name,
+            storage=c.storage)
+
     def delete(self, c):
-        self.connect.query(self.template.RMCHUNK_BYPKEY,
-                           chunk_name=c.chunk_name,
-                           storage=c.storage)
+        self.connect.query(
+            self.template.RMCHUNK_BYNAME,
+            chunk_name=c.chunk_name)

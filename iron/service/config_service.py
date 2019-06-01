@@ -11,8 +11,8 @@ class ConfigService(object):
         self.parser.sections()
 
         # Const Variabes
-        self.XXHASH_CHUNK_SIZE = 2 * 1024 * 1024 # 2M
-        self.DEFAULT_CHUNK_SIZE = 4 * 1024 * 1024  # 4M
+        self.XXHASH_CHUNK_SIZE = 512 * 1024 # 512K
+        self.DEFAULT_CHUNK_SIZE = 1 * 1024 * 1024  # 1M
         self.TMP_PATH = self.parser['Default']['TmpPath']
         self.DATA_PATH = self.parser['Default']['DataPath']
 

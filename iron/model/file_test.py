@@ -22,34 +22,34 @@ class FileTest(unittest.TestCase):
 
     def test_exist(self):
         f = File()
-        f.base_name = 'x.cpp'
-        f.full_path = '/tmp/x.cpp'
-        f.filehash = 'filehash'
-        f.chunks = ['c1', 'c2']
+        f.file_name = 'x.cpp'
+        f.path = '/tmp/x.cpp'
+        f.file_hash = 'file_hash'
+        f.chunks = {'chunk_set': ['1', '2'], 'chunk_size': 1}
         self.assertFalse(self.mapper.exist(f))
         self.mapper.add(f)
         self.assertTrue(self.mapper.exist(f))
 
     def test_fetch(self):
         f = File()
-        f.base_name = 'x.cpp'
-        f.full_path = '/tmp/x.cpp'
-        f.filehash = 'filehash'
-        f.chunks = ['c1', 'c2']
+        f.file_name = 'x.cpp'
+        f.path = '/tmp/x.cpp'
+        f.file_hash = 'file_hash'
+        f.chunks = {'chunk_set': ['1', '2'], 'chunk_size': 1}
         self.mapper.add(f)
         x_cpp = self.mapper.fetch('/tmp/x.cpp')
-        self.assertEqual(f.base_name, x_cpp.base_name)
-        self.assertEqual(f.full_path, x_cpp.full_path)
-        self.assertEqual(f.filehash, x_cpp.filehash)
+        self.assertEqual(f.file_name, x_cpp.file_name)
+        self.assertEqual(f.path, x_cpp.path)
+        self.assertEqual(f.file_hash, x_cpp.file_hash)
         self.assertEqual(f.chunks, x_cpp.chunks)
         self.assertIsNone(self.mapper.fetch('/tmp/notexist.cpp'))
 
     def test_delete(self):
         f = File()
-        f.base_name = 'x.cpp'
-        f.full_path = '/tmp/x.cpp'
-        f.filehash = 'filehash'
-        f.chunks = ['c1', 'c2']
+        f.file_name = 'x.cpp'
+        f.path = '/tmp/x.cpp'
+        f.file_hash = 'file_hash'
+        f.chunks = {'chunk_set': ['1', '2'], 'chunk_size': 1}
         self.mapper.add(f)
         self.mapper.delete(f)
         self.assertFalse(self.mapper.exist(f))
