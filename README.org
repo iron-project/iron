@@ -40,6 +40,7 @@
 
     #+begin_src bash
     $ python setup.py sdist bdist_wheel
-    $ python setup.py develop
+    $ python setup.py develop # install
     $ python iron/controller/iron_controller.py
+    $ python setup.py develop -u # uninstall
     #+end_src

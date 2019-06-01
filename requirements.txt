@@ -16,14 +16,14 @@ Jinja2==2.10.1
 jsonschema==3.0.1
 MarkupSafe==1.1.1
 odfpy==1.4.0
-openpyxl==2.4.11
+openpyxl==2.6.2
 pkg-resources==0.0.0
 pyasn1==0.4.5
 pyrsistent==0.15.2
 PySnooper==0.1.0
 pytz==2019.1
 PyYAML==5.1
-records==0.5.3
+records==0.5.2
 requests==2.22.0
 requests-toolbelt==0.9.1
 rsa==4.0
