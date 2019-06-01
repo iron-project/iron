@@ -3,13 +3,13 @@
 import sys
 import os
 import json
-import records
 import xxhash
 import pysnooper
 
 from iron.model.chunk import Chunk, ChunkMapper
 from iron.model.file import File, FileMapper
 from iron.model.directory import Directory, DirectoryMapper
+from iron.model.connect import Connect
 from iron.util.file_operator import FileUtil
 from iron.service.config_service import ConfigService
 from iron.service.chunk_service import ChunkServiceFactory
@@ -18,19 +18,18 @@ from iron.service.chunk_service import ChunkServiceFactory
 class IronService(object):
     def __init__(self, config=ConfigService()):
         self.config = config
-        self._init_mappers()
-        self.file_util = FileUtil(self.config.DEFAULT_CHUNK_SIZE, self.config.TMP_PATH)
-        self.chunk_service = ChunkServiceFactory.create(self.config.BAIDU)
-
-    def _init_mappers(self):
-        self.connect = records.Database(self.config.SQLITE_URI)
-        with open(self.config.TABLE_SCHEMA, 'r') as schema:
-            for sql in schema.read().split(';'):
-                self.connect.query(sql)
-
+        self.connect = Connect(self.config)
         self.chunk_mapper = ChunkMapper(self.connect)
         self.file_mapper = FileMapper(self.connect)
         self.directory_mapper = DirectoryMapper(self.connect)
+        self.file_util = FileUtil(self.config.DEFAULT_CHUNK_SIZE, self.config.TMP_PATH)
+        self.chunk_service = ChunkServiceFactory.create(self.config.BAIDU)
+
+    def init_records(self):
+        connect = self.connect.connection()
+        with open(self.config.TABLE_SCHEMA) as inf:
+            for q in inf.read().split(';'):
+                connect.query(q)
 
     # @pysnooper.snoop()
     def mkdir(self, dir_path, root_path=False):
@@ -44,13 +43,14 @@ class IronService(object):
 
         p = self.directory_mapper.fetch(d.pardir())
         if p is None:
-            print('{} is not exist.',format(p.path))
+            print('{} is not exist.'.format(p.path))
             return False
 
         self.directory_mapper.add(d)
         self.directory_mapper.update(p.add_directory(d))
         return True
 
+    # @pysnooper.snoop()
     def lsdir(self, dir_path):
         d = self.directory_mapper.create(dir_path)
         if self.directory_mapper.exist(d):

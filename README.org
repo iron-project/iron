@@ -35,3 +35,11 @@
     #+begin_src bash
     $ python -m unittest iron/*/*_test.py
     #+end_src
+
+*** flask
+
+    #+begin_src bash
+    $ python setup.py sdist bdist_wheel
+    $ python setup.py develop
+    $ python iron/controller/iron_controller.py
+    #+end_src

@@ -50,13 +50,13 @@ class DirectoryMapper(object):
         return d
 
     def exist(self, d):
-        record = self.connect.query(
+        record = self.connect.connection().query(
             self.template.GETDIR, id=d.path).as_dict()
         return len(record) > 0
 
     def fetch(self, path):
         normpath = os.path.normpath(path)
-        record = self.connect.query(
+        record = self.connect.connection().query(
             self.template.GETDIR, id=normpath).as_dict()
         if len(record) > 0:
             d = Directory()
@@ -65,16 +65,16 @@ class DirectoryMapper(object):
         return None
 
     def add(self, d):
-        self.connect.query(
+        self.connect.connection().query(
             self.template.PUTDIR, id=d.path,
             dir_name=d.dir_name, files=json.dumps(d.files),
             directories=json.dumps(d.directories))
 
     def update(self, d):
-        self.connect.query(
+        self.connect.connection().query(
             self.template.SETDIR, id=d.path,
             directories=json.dumps(d.directories),
             files=json.dumps(d.files))
 
     def delete(self, d):
-        self.connect.query(self.template.RMDIR, id=d.path)
+        self.connect.connection().query(self.template.RMDIR, id=d.path)

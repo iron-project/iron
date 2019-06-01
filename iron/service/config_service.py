@@ -25,5 +25,6 @@ class ConfigService(object):
         self.BAIDU_DL_CHUNK_SIZE = 1024 # 1024Bytes
 
         # SQL
-        self.SQLITE_URI = 'sqlite://'
+        self.SQLITE_URI = 'sqlite:////tmp/iron.db'
+        # self.SQLITE_URI = 'sqlite:///:memory:'
         self.TABLE_SCHEMA = os.path.join(self.CONFIG_PATH, 'iron.sql')

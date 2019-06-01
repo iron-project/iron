@@ -34,14 +34,14 @@ class FileMapper(object):
         return f
 
     def exist(self, f):
-        record = self.connect.query(
+        record = self.connect.connection().query(
             self.template.GETFILE, id=f.path).as_dict()
         return len(record) > 0
 
     # @pysnooper.snoop()
     def fetch(self, path):
         normpath = os.path.normpath(path)
-        record = self.connect.query(
+        record = self.connect.connection().query(
             self.template.GETFILE, id=normpath).as_dict()
         if len(record) > 0:
             f = File()
@@ -50,11 +50,11 @@ class FileMapper(object):
         return None
 
     def add(self, f):
-        self.connect.query(
+        self.connect.connection().query(
             self.template.PUTFILE, id=f.path,
             file_name=f.file_name, file_hash=f.file_hash,
             chunks=json.dumps(f.chunks))
 
     def delete(self, f):
-        self.connect.query(
+        self.connect.connection().query(
             self.template.RMFILE, id=f.path)

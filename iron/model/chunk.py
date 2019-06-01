@@ -28,7 +28,7 @@ class ChunkMapper(object):
 
     # @pysnooper.snoop()
     def exist(self, c):
-        record = self.connect.query(
+        record = self.connect.connection().query(
             self.template.GETCHUNK_BYPKEY,
             chunk_name=c.chunk_name,
             storage=c.storage).as_dict()
@@ -36,7 +36,7 @@ class ChunkMapper(object):
 
     # @pysnooper.snoop()
     def fetchone(self, chunk_name, storage):
-        record = self.connect.query(
+        record = self.connect.connection().query(
             self.template.GETCHUNK_BYPKEY,
             chunk_name=chunk_name,
             storage=storage).as_dict()
@@ -48,7 +48,7 @@ class ChunkMapper(object):
 
     # @pysnooper.snoop()
     def fetch(self, chunk_name):
-        record = self.connect.query(
+        record = self.connect.connection().query(
             self.template.GETCHUNK_BYNAME,
             chunk_name=chunk_name).as_dict()
         chunks = []
@@ -60,7 +60,7 @@ class ChunkMapper(object):
 
     # @pysnooper.snoop()
     def add(self, c):
-        self.connect.query(
+        self.connect.connection().query(
             self.template.PUTCHUNK,
             chunk_name=c.chunk_name,
             storage=c.storage,
@@ -68,12 +68,12 @@ class ChunkMapper(object):
 
     # @pysnooper.snoop()
     def deleteone(self, c):
-        self.connect.query(
+        self.connect.connection().query(
             self.template.RMCHUNK_BYPKEY,
             chunk_name=c.chunk_name,
             storage=c.storage)
 
     def delete(self, c):
-        self.connect.query(
+        self.connect.connection().query(
             self.template.RMCHUNK_BYNAME,
             chunk_name=c.chunk_name)
