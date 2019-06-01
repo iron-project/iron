@@ -10,7 +10,7 @@
 
 *** setup
 
-    - open iron/iron.conf, input default config.
+    - create ~iron/etc/iron.conf~
 
     #+begin_src bash
     $ tree iron/etc
