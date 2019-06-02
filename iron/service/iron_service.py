@@ -75,16 +75,17 @@ class IronService(object):
         assert(p is not None)
         self.directory_mapper.update(p.rm_directory(d))
         self.directory_mapper.delete(d)
+        return True
 
     # @pysnooper.snoop()
     def putfile(self, local_path, remote_path):
         d = self.directory_mapper.create(remote_path)
         if not self.directory_mapper.exist(d):
             print('remote path [{}] is not exist.'.format(d.path))
-            return
+            return False
         if not os.path.isfile(local_path):
             print('local path [{}] is not file.'.format(local_path))
-            return
+            return False
 
         # If file hash is equal, don't put again.
         # If file hash is not equal, just delete old file.
@@ -96,7 +97,7 @@ class IronService(object):
             f = self.file_mapper.fetch(file_path)
             if file_hash == f.file_hash:
                 print('{} is exist, skip it.'.format(file_path))
-                return
+                return True
             else:
                 print('{} is change, override it.'.format(file_path))
                 self.rmfile(file_path)
@@ -104,7 +105,8 @@ class IronService(object):
         # Update chunks
         chunk_info = self.file_util.split(local_path)
         if not self._store_chunk(file_path, chunk_info):
-            return
+            print('upload chunks failed, {}'.format(file_path))
+            return False
 
         f.file_hash = file_hash
         f.file_name = file_name
@@ -112,7 +114,7 @@ class IronService(object):
         self.file_mapper.add(f)
         d = self.directory_mapper.fetch(remote_path)
         self.directory_mapper.update(d.add_file(f))
-        return file_path
+        return True
 
     # @pysnooper.snoop()
     def getfile(self, remote_path, local_path='.'):
@@ -120,12 +122,12 @@ class IronService(object):
         local_path = os.path.normpath(local_path)
         if not self.file_mapper.exist(self.file_mapper.create(remote_path)):
             print('file is not exist, [{}]'.format(remote_path))
-            return
+            return False
 
         f = self.file_mapper.fetch(remote_path)
         if not self._fetch_chunk(f.chunks):
             print('failed to fetch chunks of file [{}]'.format(remote_path))
-            return
+            return False
 
         # combine chunks
         file_path = self.file_util.combine(f.file_name, f.chunks, local_path)
@@ -133,14 +135,14 @@ class IronService(object):
         if file_hash != f.file_hash:
             print('check file hash failed, [{}] was broken.'.format(
                 remote_path))
-            return
-        return file_path
+            return False
+        return True
 
     # @pysnooper.snoop()
     def rmfile(self, file_path):
         file_path = os.path.normpath(file_path)
         if not self.file_mapper.exist(self.file_mapper.create(file_path)):
-            return
+            return False
 
         f = self.file_mapper.fetch(file_path)
         # chunks
@@ -151,6 +153,7 @@ class IronService(object):
         d = self.directory_mapper.fetch(f.pardir())
         self.directory_mapper.update(d.rm_file(f))
         self.file_mapper.delete(f)
+        return True
 
     def _store_chunk(self, file_path, chunk_info):
         # TODO: put chunks into different chunk service
