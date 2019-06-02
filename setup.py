@@ -1,7 +1,12 @@
 from setuptools import setup, find_packages
 
-with open('README.md', 'r') as inf:
-    long_description = inf.read()
+long_description = '''
+
+### Links
+
+- https://github.com/RainMark/iron
+
+'''
 
 setup(
     name='iron',
@@ -26,7 +31,13 @@ setup(
     include_package_data=True,
     zip_safe=True,
     install_requires = [
+        'records == 0.5.2',
+        'rsa >= 4.0',
         'xxhash >= 1.3.0',
+        'PySnooper >= 0.1.0',
+        'flask-restplus >= 0.12.1',
+        'requests >= 2.22.0',
+        'requests-toolbelt >= 0.9.1',
     ],
 
     entry_points={
