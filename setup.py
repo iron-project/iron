@@ -4,18 +4,18 @@ long_description = '''
 
 ### Links
 
-- https://github.com/RainMark/iron
+- https://github.com/iron-project/iron
 
 '''
 
 setup(
     name='iron',
     version='0.0.1',
-    author='RainMark',
+    author='iron-project',
     author_email='rain.by.zhou@gmail.com',
     description='Distributed network file system',
     long_description=long_description,
-    url='https://github.com/RainMark/iron',
+    url='https://github.com/iron-project/iron',
     classifiers=[
         'Environment :: MacOS X',
         'Environment :: X11 Applications',

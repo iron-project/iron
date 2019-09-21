@@ -12,7 +12,8 @@ from iron.model.directory import Directory, DirectoryMapper
 from iron.model.connect import Connect
 from iron.util.file_operator import FileUtil
 from iron.service.config_service import ConfigService
-from iron.service.chunk_service import ChunkServiceFactory
+# from iron.service.chunk_service import ChunkServiceFactory
+from iron.service.chunk_service_master import ChunkServiceMaster
 
 
 class IronService(object):
@@ -22,8 +23,9 @@ class IronService(object):
         self.chunk_mapper = ChunkMapper(self.connect)
         self.file_mapper = FileMapper(self.connect)
         self.directory_mapper = DirectoryMapper(self.connect)
-        self.file_util = FileUtil(self.config.DEFAULT_CHUNK_SIZE, self.config.TMP_PATH)
-        self.chunk_service = ChunkServiceFactory.create(self.config.BAIDU)
+        self.file_operator = FileUtil(self.config.DEFAULT_CHUNK_SIZE, self.config.TMP_PATH)
+        # self.chunk_service = ChunkServiceFactory.create(self.config.BAIDU)
+        self.chunk_server_master = ChunkServiceMaster()
 
     def init_records(self):
         connect = self.connect.connection()
@@ -87,28 +89,23 @@ class IronService(object):
             print('local path [{}] is not file.'.format(local_path))
             return False
 
-        # If file hash is equal, don't put again.
-        # If file hash is not equal, just delete old file.
-        file_name = os.path.split(local_path)[-1]
+        file_name = os.path.basename(local_path)
         file_path = os.path.join(remote_path, file_name)
-        file_hash = self.file_util.file_hash(local_path)
+        signature = self.file_operator.signature(local_path)
         f = self.file_mapper.create(file_path)
         if self.file_mapper.exist(f):
             f = self.file_mapper.fetch(file_path)
-            if file_hash == f.file_hash:
+            if signature == f.file_hash:
                 print('{} is exist, skip it.'.format(file_path))
                 return True
             else:
                 print('{} is change, override it.'.format(file_path))
                 self.rmfile(file_path)
 
-        # Update chunks
-        chunk_info = self.file_util.split(local_path)
-        if not self._store_chunk(file_path, chunk_info):
-            print('upload chunks failed, {}'.format(file_path))
-            return False
+        chunk_info = self.file_operator.split(local_path, signature)
+        self.chunk_server_master.chunks_put(chunk_info)
 
-        f.file_hash = file_hash
+        f.file_hash = signature
         f.file_name = file_name
         f.chunks = chunk_info
         self.file_mapper.add(f)
@@ -117,22 +114,20 @@ class IronService(object):
         return True
 
     # @pysnooper.snoop()
-    def getfile(self, remote_path, local_path='.'):
+    def getfile(self, remote_path, target_dir='.'):
         remote_path = os.path.normpath(remote_path)
-        local_path = os.path.normpath(local_path)
+        target_dir = os.path.normpath(target_dir)
         if not self.file_mapper.exist(self.file_mapper.create(remote_path)):
             print('file is not exist, [{}]'.format(remote_path))
             return False
 
         f = self.file_mapper.fetch(remote_path)
-        if not self._fetch_chunk(f.chunks):
-            print('failed to fetch chunks of file [{}]'.format(remote_path))
-            return False
+        self.chunk_server_master.chunks_get(f.chunks, target_dir)
 
-        # combine chunks
-        file_path = self.file_util.combine(f.file_name, f.chunks, local_path)
-        file_hash = self.file_util.file_hash(file_path)
-        if file_hash != f.file_hash:
+        file_path = self.file_operator.merge(f.file_name, f.chunks, target_dir)
+        self.file_operator.clear(f.chunks, target_dir)
+        signature = self.file_operator.signature(file_path)
+        if signature != f.file_hash:
             print('check file hash failed, [{}] was broken.'.format(
                 remote_path))
             return False
@@ -153,27 +148,5 @@ class IronService(object):
         d = self.directory_mapper.fetch(f.pardir())
         self.directory_mapper.update(d.rm_file(f))
         self.file_mapper.delete(f)
-        return True
-
-    def _store_chunk(self, file_path, chunk_info):
-        # TODO: put chunks into different chunk service
-        for chunk_name in chunk_info['chunk_set']:
-            chunk_path = os.path.join(self.config.TMP_PATH, chunk_name)
-            if not self.chunk_service.put(chunk_path, chunk_name):
-                print('failed to store chunk [{}]'.format(chunk_name))
-                return False
-
-        for chunk_name in chunk_info['chunk_set']:
-            chunk_path = os.path.join(self.config.TMP_PATH, chunk_name)
-            chunk_hash = self.file_util.file_hash(chunk_path)
-            self.chunk_mapper.add(self.chunk_mapper.create(chunk_name, self.config.BAIDU, chunk_hash))
-        return True
-
-    def _fetch_chunk(self, chunk_info):
-        # TODO: check chunks hash, fetch chunks from different chunk service
-        for chunk_name in chunk_info['chunk_set']:
-            if not self.chunk_service.get(self.config.TMP_PATH, chunk_name):
-                print('failed to fetch remote chunk [{}]'.format(chunk_name))
-                return False
         return True
 

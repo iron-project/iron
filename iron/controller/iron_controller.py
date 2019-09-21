@@ -62,6 +62,42 @@ class MakeDirectory(Resource):
         return {'status': status, 'message': args['path']}
 
 # file controller
+file_namespace = api.namespace('files', description='file operations')
+
+param_parser_putfile = api.parser()
+param_parser_putfile.add_argument('remote_path', required=True, help='absolute path')
+param_parser_putfile.add_argument('local_path', required=True, help='absolute path')
+@file_namespace.route('/putfile')
+@file_namespace.expect(param_parser_putfile)
+class PutFile(Resource):
+    @file_namespace.marshal_with(status_model, envelope='data')
+    def post(self):
+        param = param_parser_putfile.parse_args()
+        status = iron.putfile(param['local_path'], param['remote_path'])
+        return {'status': status, 'message': 'success'}
+
+param_parser_getfile = api.parser()
+param_parser_getfile.add_argument('remote_path', required=True, help='absolute path')
+param_parser_getfile.add_argument('local_path', required=True, help='absolute path')
+@file_namespace.route('/getfile')
+@file_namespace.expect(param_parser_getfile)
+class GetFile(Resource):
+    @file_namespace.marshal_with(status_model, envelope='data')
+    def get(self):
+        param = param_parser_getfile.parse_args()
+        status = iron.getfile(param['remote_path'], param['local_path'])
+        return {'status': status, 'message': 'success'}
+
+param_parser_rmfile = api.parser()
+param_parser_rmfile.add_argument('remote_path', required=True, help='absolute path')
+@file_namespace.route('/rmfile')
+@file_namespace.expect(param_parser_rmfile)
+class RemoveFile(Resource):
+    @file_namespace.marshal_with(status_model, envelope='data')
+    def delete(self):
+        param = param_parser_rmfile.parse_args()
+        status = iron.rmfile(param['remote_path'])
+        return {'status': status, 'message': 'success'}
 
 def main():
     app.run(debug=True)
