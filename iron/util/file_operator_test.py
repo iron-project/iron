@@ -25,13 +25,9 @@ class FileUtilTest(unittest.TestCase):
     def test_simple(self):
         os.system('cp {} {}'.format(self.testdata, self.tmp_path))
         chunk_info = self.file_util.split(self.tmp_data)
-        print(chunk_info)
         os.system('rm -rf {}'.format(self.tmp_data))
 
-        file_path = self.file_util.combine(self.data_name, chunk_info, self.tmp_path)
+        file_path = self.file_util.merge(self.data_name, chunk_info, self.tmp_path)
         os.system('rm -rf {}'.format(self.tmp_data))
-
-        file_path = self.file_util.combine(self.data_name, chunk_info, self.tmp_data)
-        os.system('rm -rf {}'.format(self.tmp_data))
-        print(file_path)
+        self.assertEqual('/tmp/iron/bin.tar.xz', file_path)
 

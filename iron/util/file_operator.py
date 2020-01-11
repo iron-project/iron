@@ -23,6 +23,15 @@ class FileUtil(object):
                 chunk = infile.read(config.XXHASH_CHUNK_SIZE)
         return x.hexdigest()
 
+    def chunk_signature(self, chunk_name):
+        x = xxhash.xxh64()
+        with open(os.path.join(self.workdir, chunk_name), 'rb') as infile:
+            chunk = infile.read(self.config.XXHASH_CHUNK_SIZE)
+            while chunk:
+                x.update(chunk)
+                chunk = infile.read(self.config.XXHASH_CHUNK_SIZE)
+        return x.hexdigest()
+
     def split(self, file_path, signature=None, chunk_size=0):
         if not os.path.exists(file_path):
             print('{} is not exist.'.format(file_path))
@@ -50,6 +59,9 @@ class FileUtil(object):
     def merge(self, file_name, chunk_info, workdir):
         if os.path.isdir(workdir):
             file_path = os.path.join(workdir, file_name)
+        else:
+            raise Exception('{} is not exists.'.format(workdir))
+
         chunk_set = chunk_info['chunk_set']
         # chunk.0, chunk.1, ... , chunk.n
         chunk_set.sort(key=lambda element: int(element.split('.')[-1]))

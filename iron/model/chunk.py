@@ -7,22 +7,24 @@ class Chunk(object):
     def __init__(self):
         self.chunk_name = ''
         self.storage = ''
-        self.chunk_hash = ''
+        self.signature = ''
+        self.status = 'new'
 
     def load(self, database_data):
         self.chunk_name = database_data['chunk_name']
         self.storage = database_data['storage']
-        self.chunk_hash = database_data['chunk_hash']
+        self.signature = database_data['signature']
+        self.status = database_data['status']
 
 class ChunkMapper(object):
     def __init__(self, connect):
         self.connect = connect
         self.template = SQLTemplate()
 
-    def create(self, chunk_name, storage, chunk_hash):
+    def create(self, chunk_name, storage, signature):
         c = Chunk()
         c.chunk_name = chunk_name
-        c.chunk_hash = chunk_hash
+        c.signature = signature
         c.storage = storage
         return c
 
@@ -58,13 +60,21 @@ class ChunkMapper(object):
             chunks.append(chunk)
         return chunks
 
+    def update_status(self, c):
+        self.connect.connection().query(
+            self.template.UPDATE_CHUNK_STATUS,
+            chunk_name=c.chunk_name,
+            storage=c.storage,
+            status=c.status)
+
     # @pysnooper.snoop()
     def add(self, c):
         self.connect.connection().query(
             self.template.PUTCHUNK,
             chunk_name=c.chunk_name,
             storage=c.storage,
-            chunk_hash=c.chunk_hash)
+            signature=c.signature,
+            status=c.status)
 
     # @pysnooper.snoop()
     def deleteone(self, c):

@@ -4,17 +4,20 @@ import logging
 import threading
 from queue import Queue
 
+from iron.util.random_util import generate
+
 class Task(object):
-    def __init__(self, taskid, func, *args):
+    def __init__(self, func, *args):
         self.logger = logging.getLogger('task_executor')
         self.func = func
         self.args = args
+        self.taskid = -1
+
+    def set_taskid(self, taskid):
         self.taskid = taskid
 
     def execute(self, local_data):
-        args = ()
-        args += (local_data, )
-        args += self.args
+        args = (local_data, ) + self.args
         try:
             self.func(*args)
         except Exception as e:
@@ -67,7 +70,12 @@ class TaskExecutorService(object):
             self.workers.append(TaskExecutor())
 
     def submit(self, task):
-        worker = self.workers[task.taskid % self.max_workers]
+        if task.taskid >= 0:
+            tid = taskid.taskid
+        else:
+            tid = generate(0, self.max_workers)
+
+        worker = self.workers[tid % self.max_workers]
         worker.submit(task)
 
     def shutdown(self):

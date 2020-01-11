@@ -13,8 +13,9 @@ CREATE TABLE IF NOT EXISTS file (
 );
 
 CREATE TABLE IF NOT EXISTS chunk (
-    chunk_name   TEXT NOT NULL,
+    chunk_name TEXT NOT NULL,
     storage TEXT NOT NULL,
-    chunk_hash   TEXT NOT NULL,
+    signature TEXT NOT NULL,
+    status TEXT NOT NULL,
     PRIMARY KEY(chunk_name, storage)
 );

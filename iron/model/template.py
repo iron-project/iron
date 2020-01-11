@@ -13,6 +13,7 @@ class SQLTemplate(object):
 
         self.GETCHUNK_BYNAME = 'SELECT * FROM chunk WHERE chunk_name = :chunk_name'
         self.GETCHUNK_BYPKEY = 'SELECT * FROM chunk WHERE chunk_name = :chunk_name AND storage = :storage'
-        self.PUTCHUNK = 'INSERT INTO chunk (chunk_name, storage, chunk_hash) VALUES (:chunk_name, :storage, :chunk_hash)'
+        self.PUTCHUNK = 'INSERT INTO chunk (chunk_name, storage, signature, status) VALUES (:chunk_name, :storage, :signature, :status)'
         self.RMCHUNK_BYNAME = 'DELETE FROM chunk WHERE chunk_name = :chunk_name'
         self.RMCHUNK_BYPKEY= 'DELETE FROM chunk WHERE chunk_name = :chunk_name AND storage = :storage'
+        self.UPDATE_CHUNK_STATUS = 'UPDATE chunk SET status = :status WHERE chunk_name = :chunk_name AND storage = :storage'

@@ -5,19 +5,22 @@ import records
 
 from iron.model.file import File
 from iron.model.directory import Directory, DirectoryMapper
+from iron.model.connect import Connect
 from iron.service.config_service import ConfigService
 
 class DirectoryTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.config = ConfigService()
+        self.config.SQLITE_URI = 'sqlite:///:memory:'
 
     def setUp(self):
-        self.connect = records.Database(self.config.SQLITE_URI)
+        self.connect = Connect(self.config)
+        self.connection = self.connect.connection()
         with open(self.config.TABLE_SCHEMA, 'r') as schema:
             cmds = schema.read().split(';')
             for cmd in cmds:
-                self.connect.query(cmd)
+                self.connection.query(cmd)
 
         self.mapper = DirectoryMapper(self.connect)
 

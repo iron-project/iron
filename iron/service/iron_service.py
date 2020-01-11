@@ -25,7 +25,9 @@ class IronService(object):
         self.directory_mapper = DirectoryMapper(self.connect)
         self.file_operator = FileUtil(self.config.DEFAULT_CHUNK_SIZE, self.config.TMP_PATH)
         # self.chunk_service = ChunkServiceFactory.create(self.config.BAIDU)
-        self.chunk_server_master = ChunkServiceMaster(self.config.TMP_PATH)
+        self.chunk_server_master = ChunkServiceMaster(self.config.TMP_PATH,
+                                                      self.chunk_mapper,
+                                                      self.file_operator)
 
     def init_records(self):
         connect = self.connect.connection()
