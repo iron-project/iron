@@ -1,61 +1,43 @@
 #!/usr/bin/env python3
 
 import unittest
-import records
 
-from iron.model.file import File, FileMapper
-from iron.model.connect import Connect
-from iron.service.config_service import ConfigService
+from iron.model import db
+from iron.model.file import File, FileOperator
+
 
 class FileTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.config = ConfigService()
-        self.config.SQLITE_URI = 'sqlite:///:memory:'
-
     def setUp(self):
-        self.connect = Connect(self.config)
-        self.connection = self.connect.connection()
-        with open(self.config.TABLE_SCHEMA, 'r') as schema:
-            cmds = schema.read().split(';')
-            for cmd in cmds:
-                self.connection.query(cmd)
+        db.create_all()
+        f = FileOperator.create('/tmp/x')
+        f.chunks = ['1', '2']
+        db.session.add(f)
+        db.session.commit()
 
-        self.mapper = FileMapper(self.connect)
+    def tearDown(self):
+        db.session.commit()
+        db.drop_all()
 
     def test_exist(self):
-        f = File()
-        f.file_name = 'x.cpp'
-        f.path = '/tmp/x.cpp'
-        f.file_hash = 'file_hash'
-        f.chunks = {'chunk_set': ['1', '2'], 'chunk_size': 1}
-        self.assertFalse(self.mapper.exist(f))
-        self.mapper.add(f)
-        self.assertTrue(self.mapper.exist(f))
-
-    def test_fetch(self):
-        f = File()
-        f.file_name = 'x.cpp'
-        f.path = '/tmp/x.cpp'
-        f.file_hash = 'file_hash'
-        f.chunks = {'chunk_set': ['1', '2'], 'chunk_size': 1}
-        self.mapper.add(f)
-        x_cpp = self.mapper.fetch('/tmp/x.cpp')
-        self.assertEqual(f.file_name, x_cpp.file_name)
-        self.assertEqual(f.path, x_cpp.path)
-        self.assertEqual(f.file_hash, x_cpp.file_hash)
-        self.assertEqual(f.chunks, x_cpp.chunks)
-        self.assertIsNone(self.mapper.fetch('/tmp/notexist.cpp'))
+        f2 = FileOperator.get('/tmp/x')
+        self.assertIsNotNone(f2)
+        self.assertEqual(['1', '2'], f2.chunks)
+        f3 = FileOperator.get('xxx')
+        self.assertIsNone(f3)
 
     def test_delete(self):
-        f = File()
-        f.file_name = 'x.cpp'
-        f.path = '/tmp/x.cpp'
-        f.file_hash = 'file_hash'
-        f.chunks = {'chunk_set': ['1', '2'], 'chunk_size': 1}
-        self.mapper.add(f)
-        self.mapper.delete(f)
-        self.assertFalse(self.mapper.exist(f))
+        f2 = FileOperator.get('/tmp/x')
+        self.assertIsNotNone(f2)
+        db.session.delete(f2)
+        db.session.commit()
+        f3 = FileOperator.get('/tmp/x')
+        self.assertIsNone(f3)
 
-
-
+    def test_modify_chunks(self):
+        f2 = FileOperator.get('/tmp/x')
+        self.assertIsNotNone(f2)
+        self.assertEqual(['1', '2'], f2.chunks)
+        f2.chunks.append('3')
+        f3 = FileOperator.get('/tmp/x')
+        self.assertIsNotNone(f3)
+        self.assertEqual(['1', '2', '3'], f3.chunks)

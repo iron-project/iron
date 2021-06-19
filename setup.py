@@ -26,23 +26,21 @@ setup(
         'License :: OSI Approved :: MIT License',
     ],
 
-    # packages=['iron'],
     packages=find_packages(),
     include_package_data=True,
     zip_safe=True,
-    install_requires = [
-        'records == 0.5.2',
+    install_requires=[
         'rsa >= 4.0',
         'xxhash >= 1.3.0',
         'PySnooper >= 0.1.0',
-        'flask-restplus >= 0.12.1',
+        'Flask-SQLAlchemy == 2.5.1',
+        'flask-restx == 0.4.0',
         'requests >= 2.22.0',
         'requests-toolbelt >= 0.9.1',
     ],
-
     entry_points={
-        'console_scripts':[
-            'iron = iron.controller.iron_controller:main'
+        'console_scripts': [
+            'iron = iron.controller.iron:main'
         ]
     },
 )
