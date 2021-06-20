@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
-from os import pardir
-from iron.model import db
 from iron.model.directory import Directory, DirectoryOperator
 
 
-class FileSystemService(object):
-    def __init__(self):
-        pass
+class FileSystemService:
+    def __init__(self, db):
+        self.db = db
 
     def mkdir(self, path: str) -> bool:
         d = DirectoryOperator.get(path)
@@ -17,8 +15,8 @@ class FileSystemService(object):
 
         d = DirectoryOperator.create(path)
         if path == '/':
-            db.session.add(d)
-            db.session.commit()
+            self.db.session.add(d)
+            self.db.session.commit()
             return True
 
         pardir = DirectoryOperator.pardir(d)
@@ -27,9 +25,9 @@ class FileSystemService(object):
             print('{} not exist.'.format(pardir))
             return False
 
-        db.session.add(d)
+        self.db.session.add(d)
         p.dirs.append(d.name)
-        db.session.commit()
+        self.db.session.commit()
         return True
 
     def lsdir(self, path: str) -> Directory:
@@ -55,6 +53,6 @@ class FileSystemService(object):
             assert p is not None
             p.dirs.remove(d.name)
 
-        db.session.delete(d)
-        db.session.commit()
+        self.db.session.delete(d)
+        self.db.session.commit()
         return True

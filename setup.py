@@ -40,7 +40,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'iron = iron.controller.iron:main'
+            'iron = iron.ctrl.iron:main'
         ]
     },
 )
