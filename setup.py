@@ -37,6 +37,7 @@ setup(
         'flask-restx == 0.4.0',
         'requests >= 2.22.0',
         'requests-toolbelt >= 0.9.1',
+        'coloredlogs >= 15.0.1',
     ],
     entry_points={
         'console_scripts': [

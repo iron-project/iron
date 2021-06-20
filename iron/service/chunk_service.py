@@ -1,157 +1,47 @@
 #!/usr/bin/env python3
 
-import os, math
-import requests
-import pysnooper
+import os
 
-from iron.service.baidupcsapi import baidupcsapi
-from iron.service.config_service import ConfigService
-
-
-class Progressbar(object):
-    def __init__(self, title):
-        self.title = title
-        print('{} ...'.format(self.title))
-
-    # @pysnooper.snoop()
-    def __call__(self, *args, **kwargs):
-        if kwargs['progress'] >= kwargs['size']:
-            print('{} done'.format(self.title))
+from iron.model import db
+from iron.model.file import File
+from iron.model.chunk import ChunkOperator
+from iron.service.chunk_server import ChunkServer
 
 
-class ChunkService(object):
-    def __init__(self, source):
-        import urllib3
-        urllib3.disable_warnings()
-        self.source = source
+class ChunkService:
+    def __init__(self) -> None:
+        self.chunk_servers: dict[str, ChunkServer] = {}
+        self.idx: int = 0
+        self.replica: int = 3
 
-    def put(self, chunk_path, chunk_name):
-        return False
+    def register_chunk_server(self, chunk_server: ChunkServer) -> bool:
+        self.chunk_servers[chunk_server.name] = chunk_server
 
-    def get(self, local_path, chunk_name):
-        return False
+    def select_chunk_server(self, replica: int) -> list[ChunkServer]:
+        server = list(self.chunk_servers.values())
+        select = [server[(i + self.idx) % len(server)]
+                  for i in range(0, replica)]
+        self.idx += replica
+        return select
 
-    def quota(self):
-        return 0
+    def put(self, f: File, path: str) -> bool:
+        for server in self.select_chunk_server(self.replica):
+            for chunk_name in f.chunks:
+                if server.put(os.path.join(path, chunk_name)):
+                    chunk = ChunkOperator.create(chunk_name)
+                    chunk.server = server.name
+                    db.session.add(chunk)
 
-
-class BaiduService(ChunkService):
-    def __init__(self):
-        self.config = ConfigService()
-        super().__init__(self.config.BAIDU)
-        self.pcs = baidupcsapi.PCS(
-            self.config.BAIDU_USR_NAME, self.config.BAIDU_USR_PASSWD)
-        self._check_data_path()
-
-    def __del__(self):
-        self.pcs.session.close()
-
-    def quota(self):
-        r = self.pcs.quota()
-        if 200 != r.status_code:
-            print('failed to request baidu service. [status code {}]'.format(
-                r.status_code))
-            return 0
-        json_data = r.json()
-        if self.config.BAIDU_NO_ERR == json_data['errno']:
-            return json_data['total'] - json_data['used']
-        else:
-            print('unknow error from baidu service [errno {}]'.format(
-                json_data['errno']))
-            return 0
-
-    def _check_data_path(self):
-        r = self.pcs.list_files(self.config.DATA_PATH)
-        if 200 != r.status_code:
-            print('failed to check data path exist. [status code {}]'.format(
-                r.status_code))
-            return False
-        json_data = r.json()
-        if self.config.BAIDU_DIR_NOT_EXIST == json_data['errno']:
-            return self._mkdir(self.config.DATA_PATH)
+        db.session.commit()
         return True
 
-    def _mkdir(self, dir_path):
-        r = self.pcs.mkdir(dir_path)
-        if 200 != r.status_code:
-            print('failed to create data path. [status code {}]'.format(
-                r.status_code))
-            return False
-        json_data = r.json()
-        if self.config.BAIDU_NO_ERR != json_data['errno']:
-            return False
-        return True
-
-    def exist(self, chunk_name):
-        r = self.pcs.meta(os.path.join(self.config.DATA_PATH, chunk_name))
-        if 200 != r.status_code:
-            print('failed to fetch chunk meta info. [{}]'.format(chunk_name))
-            return False
-        json_data = r.json()
-        if self.config.BAIDU_NO_ERR != json_data['errno']:
-            return False
-        return True
-
-    # @pysnooper.snoop()
-    def put(self, chunk_path, chunk_name):
-        if not os.path.isfile(chunk_path):
-            return False
-        if self.exist(chunk_name):
-            print('chunk [{}] is exist, skip upload it.'.format(chunk_name))
-            return True
-        # TODO: encrypt chunk
-        with open(chunk_path, 'rb') as infile:
-            bar = Progressbar('Upload {}'.format(chunk_name))
-            r = self.pcs.upload(self.config.DATA_PATH, file_handler=infile,
-                                filename=chunk_name, callback=bar)
-            if 200 != r.status_code:
-                print('failed to upload chunk {} [status code {}]'.format(
-                    chunk_name, r.status_code))
-                return False
-            json_data = r.json()
-            expect_path = os.path.join(self.config.DATA_PATH, chunk_name)
-            if json_data['path'] != expect_path:
-                print('it is same to fail to upload chunk {}'.format(chunk_name))
-                return False
-        return True
-
-    # @pysnooper.snoop()
-    def get(self, local_path, chunk_name):
-        if not self.exist(chunk_name):
-            print('failed to get chunk info, [{}] is not exist'.format(chunk_name))
-            return False
-        url = os.path.join(self.config.DATA_PATH, chunk_name)
-        dlink = self.pcs.download_url(url)
-        if not len(dlink) > 0:
-            print('failed to get chunk info, chunkname {}'.format(chunk_name))
-            return False
-
-        r = requests.get(dlink[0], stream=True)
-        if 200 != r.status_code:
-            print('faild to download chunk {} [status_code {}, message {}]'.format(
-                chunk_name, r.status_code, r.content))
-            return False
-
-        chunk_file = os.path.join(local_path, chunk_name)
-        # Total size in bytes.
-        wrote = 0
-        total_size = int(r.headers.get('Content-Length', 0))
-        with open(chunk_file, 'wb') as outfile:
-            bar = Progressbar('Download {}'.format(chunk_name))
-            for chunk in r.iter_content(self.config.BAIDU_DL_CHUNK_SIZE):
-                if not chunk:
+    def get(self, f: File) -> list[str]:
+        chunks_path = []
+        for chunk_name in f.chunks:
+            for chunk in ChunkOperator.gets(chunk_name):
+                path = self.chunk_servers[chunk.server].get(chunk_name)
+                if path and len(path):
+                    chunks_path.append(path)
                     break
-                outfile.write(chunk)
-                wrote += len(chunk)
-                bar(size=total_size, progress=wrote)
 
-        if total_size != 0 and wrote != total_size:
-            print('oops, file download failed. {}'.format(chunk_name))
-        return True
-
-
-class ChunkServiceFactory(object):
-    @staticmethod
-    def create(service, config = ConfigService()):
-        if config.BAIDU == service:
-            return BaiduService()
+        return chunks_path

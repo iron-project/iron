@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 
+from iron.util.log import get_logger
 from iron.model.directory import Directory, DirectoryOperator
 
 
 class FileSystemService:
     def __init__(self, db):
+        self.log = get_logger('fs')
         self.db = db
 
     def mkdir(self, path: str) -> bool:
         d = DirectoryOperator.get(path)
         if d:
-            print('{} already exist.'.format(path))
+            self.log.warning(f'{path} already exist.')
             return True
 
         d = DirectoryOperator.create(path)
@@ -22,7 +24,7 @@ class FileSystemService:
         pardir = DirectoryOperator.pardir(d)
         p = DirectoryOperator.get(pardir)
         if not p:
-            print('{} not exist.'.format(pardir))
+            self.log.error(f'{pardir} not exist.')
             return False
 
         self.db.session.add(d)
@@ -33,19 +35,19 @@ class FileSystemService:
     def lsdir(self, path: str) -> Directory:
         d = DirectoryOperator.get(path)
         if not d:
-            print('{} not exist.'.format(path))
+            self.log.error(f'{path} not exist.')
             return None
-        print(DirectoryOperator.marshal(d))
+        self.log.info(DirectoryOperator.marshal(d))
         return d
 
     def rmdir(self, path: str) -> bool:
         d = DirectoryOperator.get(path)
         if not d:
-            print('{} not exist.'.format(path))
+            self.log.warning(f'{path} not exist.')
             return True
 
         if len(d.files) > 0 or len(d.dirs) > 0:
-            print('{} not empty.'.format(path))
+            self.log.error(f'{path} not empty.')
             return False
 
         if path != '/':

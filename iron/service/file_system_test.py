@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import unittest
 
 from iron.model import db
@@ -7,7 +9,7 @@ from iron.service.file_system import FileSystemService
 class IronServiceTest(unittest.TestCase):
     def setUp(self):
         db.create_all()
-        self.fs = FileSystemService()
+        self.fs = FileSystemService(db)
 
     def tearDown(self):
         db.drop_all()
