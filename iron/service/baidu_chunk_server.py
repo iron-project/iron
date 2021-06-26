@@ -25,8 +25,8 @@ class BaiduChunkServer(ChunkServer):
         urllib3.disable_warnings()
         self.config = Config()
         super().__init__(self.config.BAIDU)
-        self.pcs = baidupcsapi.PCS(
-            self.config.BAIDU_USR_NAME, self.config.BAIDU_USR_PASSWD)
+        self.pcs = baidupcsapi.PCS(self.config.BAIDU_USR_NAME,
+                                   self.config.BAIDU_USR_PASSWD)
         self._check_data_path()
 
     def __del__(self):
@@ -88,8 +88,10 @@ class BaiduChunkServer(ChunkServer):
         # TODO: encrypt chunk
         with open(chunk_path, 'rb') as infile:
             bar = Progressbar('Upload {}'.format(chunk_name))
-            r = self.pcs.upload(self.config.DATA_PATH, file_handler=infile,
-                                filename=chunk_name, callback=bar)
+            r = self.pcs.upload(self.config.DATA_PATH,
+                                file_handler=infile,
+                                filename=chunk_name,
+                                callback=bar)
             if 200 != r.status_code:
                 print('failed to upload chunk {} [status code {}]'.format(
                     chunk_name, r.status_code))
@@ -97,14 +99,15 @@ class BaiduChunkServer(ChunkServer):
             json_data = r.json()
             expect_path = os.path.join(self.config.DATA_PATH, chunk_name)
             if json_data['path'] != expect_path:
-                print('it is same to fail to upload chunk {}'.format(chunk_name))
+                print(
+                    'it is same to fail to upload chunk {}'.format(chunk_name))
                 return False
         return True
 
     def get(self, chunk_name: str) -> str:
         if not self.exist(chunk_name):
-            print(
-                'failed to get chunk info, [{}] is not exist'.format(chunk_name))
+            print('failed to get chunk info, [{}] is not exist'.format(
+                chunk_name))
             return False
         url = os.path.join(self.config.DATA_PATH, chunk_name)
         dlink = self.pcs.download_url(url)
@@ -114,8 +117,8 @@ class BaiduChunkServer(ChunkServer):
 
         r = requests.get(dlink[0], stream=True)
         if 200 != r.status_code:
-            print('faild to download chunk {} [status_code {}, message {}]'.format(
-                chunk_name, r.status_code, r.content))
+            print('faild to download chunk {} [status_code {}, message {}]'.
+                  format(chunk_name, r.status_code, r.content))
             return False
 
         chunk_file = os.path.join(self.workspace, chunk_name)

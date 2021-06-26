@@ -9,6 +9,8 @@ coloredlogs.DEFAULT_FIELD_STYLES['levelname'] = {'bold': True}
 
 def get_logger(name: str = None) -> logging.Logger:
     logger = logging.getLogger(name)
-    coloredlogs.install(level=logging.INFO, fmt=fmt,
-                        milliseconds=True, logger=logger)
+    coloredlogs.install(level=logging.INFO,
+                        fmt=fmt,
+                        milliseconds=True,
+                        logger=logger)
     return logger

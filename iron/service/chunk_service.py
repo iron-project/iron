@@ -21,8 +21,9 @@ class ChunkService:
 
     def select_chunk_server(self, replica: int) -> list[ChunkServer]:
         server = list(self.chunk_servers.values())
-        select = [server[(i + self.idx) % len(server)]
-                  for i in range(0, replica)]
+        select = [
+            server[(i + self.idx) % len(server)] for i in range(0, replica)
+        ]
         self.idx += replica
         return select
 

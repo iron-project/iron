@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-from sys import path
 from iron.util.hash import Hash
 from iron.config import Config
 from iron.util.chunk_maker import ChunkMaker
@@ -87,7 +86,8 @@ class FileSystemService:
             self.log.error(f'put file [{src}] to {[dst]} fail')
             return None
 
-        if not self.chunk_service.put(f, self.maker.config.chunk_maker_workspace):
+        if not self.chunk_service.put(f,
+                                      self.maker.config.chunk_maker_workspace):
             self.log.error(f'put file [{src}] to {[dst]} fail')
             return None
 

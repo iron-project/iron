@@ -26,8 +26,8 @@ class ChunkMaker:
             chunk = inf.read(self.config.DEFAULT_CHUNK_SIZE)
             while chunk:
                 chunk_name = f'{basename}.{i}'
-                chunk_path = os.path.join(
-                    self.config.chunk_maker_workspace, chunk_name)
+                chunk_path = os.path.join(self.config.chunk_maker_workspace,
+                                          chunk_name)
                 with open(chunk_path, 'wb') as outf:
                     outf.write(chunk)
 
@@ -42,8 +42,8 @@ class ChunkMaker:
         open(path, 'wb').close()
         with open(path, 'ab') as outf:
             for chunk_name in chunks:
-                chunk_path = os.path.join(
-                    self.config.chunk_maker_workspace, chunk_name)
+                chunk_path = os.path.join(self.config.chunk_maker_workspace,
+                                          chunk_name)
                 with open(chunk_path, 'rb') as inf:
                     chunk = inf.read(self.config.DEFAULT_CHUNK_SIZE)
                     outf.write(chunk)

@@ -16,7 +16,10 @@ class Directory(db.Model):
 class DirectoryOperator:
     @staticmethod
     def create(path: str) -> Directory:
-        return Directory(path=path, name=os.path.split(path)[1], dirs=[], files=[])
+        return Directory(path=path,
+                         name=os.path.split(path)[1],
+                         dirs=[],
+                         files=[])
 
     @staticmethod
     def pardir(d: Directory) -> str:
@@ -28,4 +31,9 @@ class DirectoryOperator:
 
     @staticmethod
     def marshal(d: Directory) -> str:
-        return {'path': d.path, 'name': d.name, 'dirs': d.dirs, 'files': d.files}
+        return {
+            'path': d.path,
+            'name': d.name,
+            'dirs': d.dirs,
+            'files': d.files
+        }

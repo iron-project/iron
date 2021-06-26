@@ -6,27 +6,25 @@ from iron.ctrl import api
 from iron.service import fs
 from iron.model.directory import DirectoryOperator
 
-directory_namespace = api.namespace(
-    'directories', description='directory operations')
+directory_namespace = api.namespace('directories',
+                                    description='directory operations')
 
 directory_model = api.model(
-    'Directory',
-    {
+    'Directory', {
         'path': fields.String,
         'name': fields.String,
         'dirs': fields.List(fields.String),
         'files': fields.List(fields.String)
     })
 
-status_model = api.model(
-    'Status',
-    {
-        'status': fields.Boolean,
-        'message': fields.String
-    })
+status_model = api.model('Status', {
+    'status': fields.Boolean,
+    'message': fields.String
+})
 
 directory_argument = api.parser()
-directory_argument.add_argument('path', required=True,
+directory_argument.add_argument('path',
+                                required=True,
                                 help='directory absolute path')
 
 
