@@ -12,11 +12,15 @@ from iron.service.chunk_service import ChunkService
 class MockChunkServer(ChunkServer):
     def __init__(self, name: str, workspace: str) -> None:
         super().__init__(name, workspace)
+        self.log = get_logger(__name__)
 
-    def get(self, chunk: str) -> str:
-        return os.path.join(self.workspace, chunk)
+    def get(self, chunk: str) -> bool:
+        path = os.path.join(self.workspace, chunk)
+        self.log.info(f'get chunk {path} from {self.name}')
+        return True
 
     def put(self, path: str) -> bool:
+        self.log.info(f'put chunk {path} to {self.name}')
         return True
 
     def quota(self) -> int:
@@ -50,6 +54,4 @@ class ChunkServiceTest(unittest.TestCase):
         db.session.add(f)
         db.session.commit()
 
-        chunks_path = self.service.get(f)
-        self.assertEqual(2, len(chunks_path))
-        self.log.info(chunks_path)
+        self.assertTrue(self.service.get(f))

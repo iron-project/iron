@@ -5,11 +5,13 @@ import os
 from iron.model import db
 from iron.model.file import File
 from iron.model.chunk import ChunkOperator
+from iron.util.log import get_logger
 from iron.service.chunk_server import ChunkServer
 
 
 class ChunkService:
     def __init__(self) -> None:
+        self.log = get_logger(__name__)
         self.chunk_servers: dict[str, ChunkServer] = {}
         self.idx: int = 0
         self.replica: int = 3
@@ -25,6 +27,9 @@ class ChunkService:
         return select
 
     def put(self, f: File, path: str) -> bool:
+        if len(self.chunk_servers) < self.replica:
+            self.log.error(f'chunk server less than replica {self.replica}')
+            return False
         for server in self.select_chunk_server(self.replica):
             for chunk_name in f.chunks:
                 if server.put(os.path.join(path, chunk_name)):
@@ -35,13 +40,16 @@ class ChunkService:
         db.session.commit()
         return True
 
-    def get(self, f: File) -> list[str]:
-        chunks_path = []
+    def get(self, f: File) -> bool:
         for chunk_name in f.chunks:
+            success = False
             for chunk in ChunkOperator.gets(chunk_name):
-                path = self.chunk_servers[chunk.server].get(chunk_name)
-                if path and len(path):
-                    chunks_path.append(path)
+                if self.chunk_servers[chunk.server].get(chunk_name):
+                    success = True
                     break
-
-        return chunks_path
+                self.log.warning(
+                    f'get chunk {chunk.name} from {chunk.server} fail')
+            if not success:
+                self.log.error(f'fail to get chunk {chunk_name}')
+                return False
+        return True

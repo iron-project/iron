@@ -6,8 +6,8 @@ class ChunkServer:
         self.workspace = workspace
         self.name = name
 
-    def get(self, chunk: str) -> str:
-        return ''
+    def get(self, chunk: str) -> bool:
+        return None
 
     def put(self, path: str) -> bool:
         return False

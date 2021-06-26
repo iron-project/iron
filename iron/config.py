@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
 
-class ConfigService(object):
+class Config:
     def __init__(self, *args, **kwargs):
-        # Const Variabes
-        self.XXHASH_CHUNK_SIZE = 512 * 1024  # 512K
         self.DEFAULT_CHUNK_SIZE = 1 * 1024 * 1024  # 1M
-        self.TMP_PATH = '/tmp'
-        self.DATA_PATH = 'tmp'
+
+        self.chunk_maker_workspace = '/tmp/iron/chunks'
 
         # Baidu
         self.BAIDU = 'baidu'

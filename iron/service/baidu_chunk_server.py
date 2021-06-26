@@ -3,8 +3,8 @@
 import os
 import requests
 
+from iron.config import Config
 from iron.service.baidupcsapi import baidupcsapi
-from iron.service.config_service import ConfigService
 from iron.service.chunk_server import ChunkServer
 
 
@@ -23,7 +23,7 @@ class BaiduChunkServer(ChunkServer):
         super().__init__(name, workspace)
         import urllib3
         urllib3.disable_warnings()
-        self.config = ConfigService()
+        self.config = Config()
         super().__init__(self.config.BAIDU)
         self.pcs = baidupcsapi.PCS(
             self.config.BAIDU_USR_NAME, self.config.BAIDU_USR_PASSWD)
