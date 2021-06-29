@@ -6,6 +6,8 @@ class Config:
         self.DEFAULT_CHUNK_SIZE = 1 * 1024 * 1024  # 1M
 
         self.chunk_maker_workspace = '/tmp/iron/chunks'
+        self.iron_upload = '/tmp/iron/upload'
+        self.iron_download = '/tmp/iron/download'
 
         # Baidu
         self.BAIDU = 'baidu'

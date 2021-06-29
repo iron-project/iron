@@ -7,10 +7,10 @@ class ChunkServer:
         self.name = name
 
     def get(self, chunk: str) -> bool:
-        return None
+        return True
 
     def put(self, path: str) -> bool:
-        return False
+        return True
 
     def quota(self) -> int:
         return 0

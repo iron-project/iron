@@ -1,31 +1,19 @@
 #!/usr/bin/env python3
 
-from flask_restx import Resource, fields
+import os
+from flask_restx import Resource
 
-from iron.ctrl import api
 from iron.service import fs
 from iron.model.directory import DirectoryOperator
+from iron.ctrl import api
+from iron.ctrl.model import status_model, directory_model
 
 directory_namespace = api.namespace('directories',
                                     description='directory operations')
-
-directory_model = api.model(
-    'Directory', {
-        'path': fields.String,
-        'name': fields.String,
-        'dirs': fields.List(fields.String),
-        'files': fields.List(fields.String)
-    })
-
-status_model = api.model('Status', {
-    'status': fields.Boolean,
-    'message': fields.String
-})
-
 directory_argument = api.parser()
 directory_argument.add_argument('path',
                                 required=True,
-                                help='directory absolute path')
+                                help='directory path')
 
 
 @directory_namespace.route('/readdir')
@@ -34,7 +22,8 @@ class GetDirectory(Resource):
     @directory_namespace.marshal_with(directory_model, envelope='data')
     def get(self):
         args = directory_argument.parse_args()
-        directory = fs.lsdir(args['path'])
+        path = os.path.normpath(args['path'])
+        directory = fs.lsdir(path)
         if directory is None:
             return None, 404
         else:
@@ -47,7 +36,8 @@ class CreateDirectory(Resource):
     @directory_namespace.marshal_with(status_model, envelope='data')
     def post(self):
         args = directory_argument.parse_args()
-        status = fs.mkdir(args['path'])
+        path = os.path.normpath(args['path'])
+        status = fs.mkdir(path)
         return {'status': status, 'message': args['path']}
 
 
@@ -57,5 +47,6 @@ class DeleteDirectory(Resource):
     @directory_namespace.marshal_with(status_model, envelope='data')
     def delete(self):
         args = directory_argument.parse_args()
-        status = fs.rmdir(args['path'])
+        path = os.path.normpath(args['path'])
+        status = fs.rmdir(path)
         return {'status': status, 'message': args['path']}

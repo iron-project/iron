@@ -39,8 +39,7 @@ class ChunkMaker:
     def combine(self, path: str, chunks: list[str]) -> None:
         # chunk.0, chunk.1, ... , chunk.n
         chunks.sort(key=lambda element: int(element.split('.')[-1]))
-        open(path, 'wb').close()
-        with open(path, 'ab') as outf:
+        with open(path, 'wb') as outf:
             for chunk_name in chunks:
                 chunk_path = os.path.join(self.config.chunk_maker_workspace,
                                           chunk_name)
