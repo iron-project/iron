@@ -33,6 +33,7 @@ setup(
         'rsa >= 4.0',
         'xxhash >= 1.3.0',
         'PySnooper >= 0.1.0',
+        'Flask-Cors == 3.0.10',
         'Flask-SQLAlchemy == 2.5.1',
         'flask-restx == 0.4.0',
         'requests >= 2.22.0',

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from flask_cors import CORS
 from iron.model import db
 from iron.ctrl import app, api
 from iron.ctrl.file_ctrl import file_namespace
@@ -24,6 +25,7 @@ def main():
     db.create_all()
     register_chunk_server()
     register_namespace()
+    CORS(app)
     app.run(debug=True)
 
 
