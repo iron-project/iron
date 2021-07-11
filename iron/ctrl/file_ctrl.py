@@ -30,8 +30,6 @@ class PutFile(Resource):
     def __init__(self, api, *args, **kwargs):
         super().__init__(api=api, *args, **kwargs)
         self.config = Config()
-        if not os.path.exists(self.config.iron_upload):
-            os.makedirs(self.config.iron_upload)
 
     @file_namespace.marshal_with(file_model, envelope='data')
     def post(self):
@@ -60,8 +58,6 @@ class GetFile(Resource):
     def __init__(self, api, *args, **kwargs):
         super().__init__(api=api, *args, **kwargs)
         self.config = Config()
-        if not os.path.exists(self.config.iron_download):
-            os.makedirs(self.config.iron_download)
 
     def get(self):
         args = file_argument.parse_args()
