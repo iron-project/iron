@@ -40,7 +40,6 @@ class HttpChunkServer(ChunkServer):
             self.log.info(
                 f'fail to request {r.request.url}, status code {r.status_code}')
             return False
-        self.log.info(r.headers.get('content-type'))
         return True
 
     def quota(self) -> int:

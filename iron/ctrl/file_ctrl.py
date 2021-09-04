@@ -47,8 +47,9 @@ class PutFile(Resource):
         fpath = os.path.join(self.config.iron_upload, name)
         with open(fpath, 'wb') as f:
             chunk = stream.read(self.config.DEFAULT_CHUNK_SIZE)
-            if chunk:
+            while chunk:
                 f.write(chunk)
+                chunk = stream.read(self.config.DEFAULT_CHUNK_SIZE)
         return fpath
 
 
