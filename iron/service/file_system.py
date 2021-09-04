@@ -14,8 +14,11 @@ class FileSystemService:
     def __init__(self, db):
         self.log = get_logger('fs')
         self.db = db
-        self.config = Config()
         self.chunk_service = ChunkService()
+        self.set_config(Config())
+
+    def set_config(self, config: Config) -> None:
+        self.config = config
         self.maker = ChunkMaker(self.config)
 
     def mkdir(self, path: str) -> bool:
