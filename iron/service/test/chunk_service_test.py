@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import time
 import unittest
 from iron.util.log import get_logger
 from iron.model import db
@@ -17,10 +18,12 @@ class MockChunkServer(ChunkServer):
     def get(self, chunk: str) -> bool:
         path = os.path.join(self.workspace, chunk)
         self.log.info(f'get chunk {path} from {self.name}')
+        time.sleep(0.2)
         return True
 
     def put(self, path: str) -> bool:
         self.log.info(f'put chunk {path} to {self.name}')
+        time.sleep(0.2)
         return True
 
     def quota(self) -> int:
